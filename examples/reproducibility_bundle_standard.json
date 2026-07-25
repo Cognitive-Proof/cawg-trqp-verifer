@@ -1,0 +1,535 @@
+{
+  "bundle_type": "cawg-trqp-audit-bundle",
+  "bundle_profile": "https://sankarshanmukhopadhyay.github.io/cawg-trqp-verifier-refimpl/profiles/audit-bundle/v1",
+  "bundle_version": "1.3.0",
+  "exported_at": "2026-03-31T00:00:00Z",
+  "bundle_id": "urn:trqp:audit-bundle:sha256:7626b9bb606a5f6ced9dd9b92787ad4ffebf67db3935157ade1495615d609d61",
+  "request_summary": {
+    "asset_id": "asset-001",
+    "entity_id": "did:web:publisher.example",
+    "authority_id": "did:web:media-registry.example",
+    "issuer_id": "did:web:issuer.example",
+    "action": "publish",
+    "resource": "cawg:news-content",
+    "context": {
+      "jurisdiction": "IN",
+      "credential_type": "vc:creator-identity",
+      "risk_tier": "medium",
+      "content_type": "image"
+    },
+    "has_process_evidence": true
+  },
+  "verification_result": {
+    "asset_integrity": "verified",
+    "assertion_binding": "verified",
+    "issuer_recognition": "recognized",
+    "actor_authorization": "authorized",
+    "process_integrity": "verified_high",
+    "policy_freshness": "fresh",
+    "verification_mode": "cached_online",
+    "trust_outcome": "trusted",
+    "process_appraisal": {
+      "status": "verified",
+      "process_type": "human_assisted",
+      "confidence": 0.91,
+      "minimum_confidence": 0.75,
+      "evidence_ref": "urn:example:pop:asset-001",
+      "evidence_format": "application/cpop+cbor",
+      "appraisal": "writers_authenticity_report",
+      "reference": "https://github.com/LF-Decentralized-Trust-labs/proof-of-process"
+    },
+    "policy_evidence": {
+      "authorization_evidence": [
+        "registry-entry:publisher-123",
+        "policy:media-publish-v2"
+      ],
+      "recognition_evidence": [
+        "trust-list:issuer-77"
+      ],
+      "policy_epoch": "2026-Q1",
+      "policy_requirements": {
+        "requires_process_proof": true,
+        "min_process_integrity": 0.75,
+        "allowed_process_types": [
+          "human_assisted",
+          "verified_editorial_pipeline"
+        ]
+      },
+      "verification_profile": {
+        "id": "standard",
+        "base_profile": "standard",
+        "controls": {
+          "authority": {
+            "trust_anchors_required": false,
+            "allow_untrusted": true
+          },
+          "freshness": {
+            "max_age_seconds": 3600,
+            "require_live": false
+          },
+          "revocation": {
+            "mode": "delta",
+            "hard_fail": false,
+            "max_age_seconds": 3600,
+            "enforcement": "warn",
+            "delta_channel_required": false
+          },
+          "failure": {
+            "network_failure": "fail_open",
+            "policy_unavailable": "fail_open"
+          },
+          "evidence": {
+            "emit_audit_bundle": true,
+            "require_attestation": false,
+            "require_feed_descriptors": false
+          },
+          "descriptor_policy": {
+            "policy": "observe",
+            "revocation": "observe",
+            "snapshot": "observe",
+            "gateway_route": "observe"
+          },
+          "transport": {
+            "mode": "http",
+            "integrity": "tls",
+            "availability_requirement": "best_effort"
+          },
+          "determinism": {
+            "replayable": true,
+            "require_pinned_feeds": false
+          }
+        },
+        "overlays": [],
+        "source": "profiles/standard.json"
+      },
+      "transport": {
+        "required": {
+          "mode": "http",
+          "integrity": "tls",
+          "availability_requirement": "best_effort"
+        },
+        "actual": {
+          "mode": "http",
+          "integrity": "tls",
+          "available": true,
+          "channel": "delta"
+        },
+        "violations": [],
+        "satisfied": true
+      },
+      "revocation_status": {
+        "source": "service",
+        "issued_at": "2026-12-31T00:00:00Z",
+        "policy_epoch": "2026-Q1",
+        "channel": "delta",
+        "age_seconds": 0,
+        "feed_descriptor": {
+          "descriptor_id": null,
+          "feed_type": null,
+          "authority_id": null,
+          "route_attested": false,
+          "integrity_ok": false,
+          "authority_ok": false,
+          "signature_ok": false,
+          "freshness_ok": false,
+          "reason_code": "missing_feed_descriptor",
+          "violations": [
+            "feed descriptor is missing"
+          ],
+          "digest_sha256": null,
+          "declared_digest_sha256": null,
+          "issued_at": null,
+          "valid_until": null,
+          "max_age_seconds": null
+        },
+        "freshness_ok": true,
+        "max_age_seconds": 3600,
+        "enforcement": "warn",
+        "violations": []
+      },
+      "feed_descriptors": {
+        "policy": {
+          "descriptor_id": null,
+          "feed_type": null,
+          "authority_id": null,
+          "route_attested": false,
+          "integrity_ok": false,
+          "authority_ok": false,
+          "signature_ok": false,
+          "freshness_ok": false,
+          "reason_code": "missing_feed_descriptor",
+          "violations": [
+            "feed descriptor is missing"
+          ],
+          "digest_sha256": null,
+          "declared_digest_sha256": null,
+          "issued_at": null,
+          "valid_until": null,
+          "max_age_seconds": null
+        },
+        "revocation": {
+          "descriptor_id": null,
+          "feed_type": null,
+          "authority_id": null,
+          "route_attested": false,
+          "integrity_ok": false,
+          "authority_ok": false,
+          "signature_ok": false,
+          "freshness_ok": false,
+          "reason_code": "missing_feed_descriptor",
+          "violations": [
+            "feed descriptor is missing"
+          ],
+          "digest_sha256": null,
+          "declared_digest_sha256": null,
+          "issued_at": null,
+          "valid_until": null,
+          "max_age_seconds": null
+        }
+      }
+    },
+    "gateway_mediation": {},
+    "explanations": [
+      "Verification profile: standard",
+      "Live authorization lookup executed",
+      "Live recognition lookup executed"
+    ]
+  },
+  "policy_evidence": {
+    "authorization_evidence": [
+      "registry-entry:publisher-123",
+      "policy:media-publish-v2"
+    ],
+    "recognition_evidence": [
+      "trust-list:issuer-77"
+    ],
+    "policy_epoch": "2026-Q1",
+    "policy_requirements": {
+      "requires_process_proof": true,
+      "min_process_integrity": 0.75,
+      "allowed_process_types": [
+        "human_assisted",
+        "verified_editorial_pipeline"
+      ]
+    },
+    "verification_profile": {
+      "id": "standard",
+      "base_profile": "standard",
+      "controls": {
+        "authority": {
+          "trust_anchors_required": false,
+          "allow_untrusted": true
+        },
+        "freshness": {
+          "max_age_seconds": 3600,
+          "require_live": false
+        },
+        "revocation": {
+          "mode": "delta",
+          "hard_fail": false,
+          "max_age_seconds": 3600,
+          "enforcement": "warn",
+          "delta_channel_required": false
+        },
+        "failure": {
+          "network_failure": "fail_open",
+          "policy_unavailable": "fail_open"
+        },
+        "evidence": {
+          "emit_audit_bundle": true,
+          "require_attestation": false,
+          "require_feed_descriptors": false
+        },
+        "descriptor_policy": {
+          "policy": "observe",
+          "revocation": "observe",
+          "snapshot": "observe",
+          "gateway_route": "observe"
+        },
+        "transport": {
+          "mode": "http",
+          "integrity": "tls",
+          "availability_requirement": "best_effort"
+        },
+        "determinism": {
+          "replayable": true,
+          "require_pinned_feeds": false
+        }
+      },
+      "overlays": [],
+      "source": "profiles/standard.json"
+    },
+    "transport": {
+      "required": {
+        "mode": "http",
+        "integrity": "tls",
+        "availability_requirement": "best_effort"
+      },
+      "actual": {
+        "mode": "http",
+        "integrity": "tls",
+        "available": true,
+        "channel": "delta"
+      },
+      "violations": [],
+      "satisfied": true
+    },
+    "revocation_status": {
+      "source": "service",
+      "issued_at": "2026-12-31T00:00:00Z",
+      "policy_epoch": "2026-Q1",
+      "channel": "delta",
+      "age_seconds": 0,
+      "feed_descriptor": {
+        "descriptor_id": null,
+        "feed_type": null,
+        "authority_id": null,
+        "route_attested": false,
+        "integrity_ok": false,
+        "authority_ok": false,
+        "signature_ok": false,
+        "freshness_ok": false,
+        "reason_code": "missing_feed_descriptor",
+        "violations": [
+          "feed descriptor is missing"
+        ],
+        "digest_sha256": null,
+        "declared_digest_sha256": null,
+        "issued_at": null,
+        "valid_until": null,
+        "max_age_seconds": null
+      },
+      "freshness_ok": true,
+      "max_age_seconds": 3600,
+      "enforcement": "warn",
+      "violations": []
+    },
+    "feed_descriptors": {
+      "policy": {
+        "descriptor_id": null,
+        "feed_type": null,
+        "authority_id": null,
+        "route_attested": false,
+        "integrity_ok": false,
+        "authority_ok": false,
+        "signature_ok": false,
+        "freshness_ok": false,
+        "reason_code": "missing_feed_descriptor",
+        "violations": [
+          "feed descriptor is missing"
+        ],
+        "digest_sha256": null,
+        "declared_digest_sha256": null,
+        "issued_at": null,
+        "valid_until": null,
+        "max_age_seconds": null
+      },
+      "revocation": {
+        "descriptor_id": null,
+        "feed_type": null,
+        "authority_id": null,
+        "route_attested": false,
+        "integrity_ok": false,
+        "authority_ok": false,
+        "signature_ok": false,
+        "freshness_ok": false,
+        "reason_code": "missing_feed_descriptor",
+        "violations": [
+          "feed descriptor is missing"
+        ],
+        "digest_sha256": null,
+        "declared_digest_sha256": null,
+        "issued_at": null,
+        "valid_until": null,
+        "max_age_seconds": null
+      }
+    }
+  },
+  "process_appraisal": {
+    "status": "verified",
+    "process_type": "human_assisted",
+    "confidence": 0.91,
+    "minimum_confidence": 0.75,
+    "evidence_ref": "urn:example:pop:asset-001",
+    "evidence_format": "application/cpop+cbor",
+    "appraisal": "writers_authenticity_report",
+    "reference": "https://github.com/LF-Decentralized-Trust-labs/proof-of-process"
+  },
+  "gateway_mediation": {},
+  "replay_inputs": {
+    "request": {
+      "asset_id": "asset-001",
+      "integrity_ok": true,
+      "entity_id": "did:web:publisher.example",
+      "authority_id": "did:web:media-registry.example",
+      "issuer_id": "did:web:issuer.example",
+      "action": "publish",
+      "resource": "cawg:news-content",
+      "context": {
+        "jurisdiction": "IN",
+        "credential_type": "vc:creator-identity",
+        "risk_tier": "medium",
+        "content_type": "image"
+      },
+      "process_evidence": {
+        "verified": true,
+        "process_type": "human_assisted",
+        "confidence": 0.91,
+        "evidence_ref": "urn:example:pop:asset-001",
+        "evidence_format": "application/cpop+cbor",
+        "appraisal": "writers_authenticity_report",
+        "reference": "https://github.com/LF-Decentralized-Trust-labs/proof-of-process"
+      }
+    },
+    "profile": {
+      "id": "standard",
+      "base_profile": "standard",
+      "controls": {
+        "authority": {
+          "trust_anchors_required": false,
+          "allow_untrusted": true
+        },
+        "freshness": {
+          "max_age_seconds": 3600,
+          "require_live": false
+        },
+        "revocation": {
+          "mode": "delta",
+          "hard_fail": false,
+          "max_age_seconds": 3600,
+          "enforcement": "warn",
+          "delta_channel_required": false
+        },
+        "failure": {
+          "network_failure": "fail_open",
+          "policy_unavailable": "fail_open"
+        },
+        "evidence": {
+          "emit_audit_bundle": true,
+          "require_attestation": false,
+          "require_feed_descriptors": false
+        },
+        "descriptor_policy": {
+          "policy": "observe",
+          "revocation": "observe",
+          "snapshot": "observe",
+          "gateway_route": "observe"
+        },
+        "transport": {
+          "mode": "http",
+          "integrity": "tls",
+          "availability_requirement": "best_effort"
+        },
+        "determinism": {
+          "replayable": true,
+          "require_pinned_feeds": false
+        }
+      },
+      "overlays": [],
+      "source": "profiles/standard.json"
+    },
+    "use_gateway": false,
+    "verification_mode": "cached_online",
+    "policy_epoch": "2026-Q1",
+    "transport_metadata": {
+      "required": {
+        "mode": "http",
+        "integrity": "tls",
+        "availability_requirement": "best_effort"
+      },
+      "actual": {
+        "mode": "http",
+        "integrity": "tls",
+        "available": true,
+        "channel": "delta"
+      },
+      "violations": [],
+      "satisfied": true
+    },
+    "revocation_status": {
+      "source": "service",
+      "issued_at": "2026-12-31T00:00:00Z",
+      "policy_epoch": "2026-Q1",
+      "channel": "delta",
+      "age_seconds": 0,
+      "feed_descriptor": {
+        "descriptor_id": null,
+        "feed_type": null,
+        "authority_id": null,
+        "route_attested": false,
+        "integrity_ok": false,
+        "authority_ok": false,
+        "signature_ok": false,
+        "freshness_ok": false,
+        "reason_code": "missing_feed_descriptor",
+        "violations": [
+          "feed descriptor is missing"
+        ],
+        "digest_sha256": null,
+        "declared_digest_sha256": null,
+        "issued_at": null,
+        "valid_until": null,
+        "max_age_seconds": null
+      },
+      "freshness_ok": true,
+      "max_age_seconds": 3600,
+      "enforcement": "warn",
+      "violations": []
+    },
+    "feed_descriptors": {
+      "policy": {
+        "descriptor_id": null,
+        "feed_type": null,
+        "authority_id": null,
+        "route_attested": false,
+        "integrity_ok": false,
+        "authority_ok": false,
+        "signature_ok": false,
+        "freshness_ok": false,
+        "reason_code": "missing_feed_descriptor",
+        "violations": [
+          "feed descriptor is missing"
+        ],
+        "digest_sha256": null,
+        "declared_digest_sha256": null,
+        "issued_at": null,
+        "valid_until": null,
+        "max_age_seconds": null
+      },
+      "revocation": {
+        "descriptor_id": null,
+        "feed_type": null,
+        "authority_id": null,
+        "route_attested": false,
+        "integrity_ok": false,
+        "authority_ok": false,
+        "signature_ok": false,
+        "freshness_ok": false,
+        "reason_code": "missing_feed_descriptor",
+        "violations": [
+          "feed descriptor is missing"
+        ],
+        "digest_sha256": null,
+        "declared_digest_sha256": null,
+        "issued_at": null,
+        "valid_until": null,
+        "max_age_seconds": null
+      }
+    },
+    "replay_contract": {
+      "transport_verified": true,
+      "revocation_freshness_evaluated": true,
+      "feed_descriptor_evidence_available": true,
+      "deterministic_inputs": true
+    },
+    "policy_feed": {
+      "policy_source": "data/policies.json",
+      "policy_source_sha256": "8396c9ccfed4aab0843716a3f23642e3fe2533858473246ba7c0729bff745e58",
+      "revocation_source": "data/revocations.json",
+      "revocation_source_sha256": "06645caaeb12c75f23b3c57490f5dc6d6936178b7dc3100c749629c1975f33e3",
+      "trust_anchors_source": "data/trust_anchors.json",
+      "trust_anchors_source_sha256": "3dfb1096c63810c8b1d6892b8377bc0e5403760f3d008d7ff00d54bf5407dc45"
+    }
+  },
+  "bundle_digest_sha256": "23279a952faae4aa044c97e2b4ba840ad440ec6ead41d73d2a2147a2e7b388ad"
+}

@@ -1,0 +1,45 @@
+{
+  "snapshot_id": "snapshot-2026-q1",
+  "generated_at": "2026-03-20T00:00:00Z",
+  "expires_at": "2026-12-31T23:59:59Z",
+  "signer": "did:web:media-registry.example#snapshot-signer-1",
+  "policy_epoch": "2026-Q1",
+  "freshness": "snapshot",
+  "authorization": [
+    {
+      "entity_id": "did:web:publisher.example",
+      "authority_id": "did:web:media-registry.example",
+      "action": "publish",
+      "resource": "cawg:news-content",
+      "context": {
+        "jurisdiction": "IN"
+      },
+      "authorized": true,
+      "policy_epoch": "2026-Q1",
+      "policy_requirements": {
+        "requires_process_proof": true,
+        "min_process_integrity": 0.75,
+        "allowed_process_types": [
+          "human_assisted",
+          "verified_editorial_pipeline"
+        ]
+      }
+    }
+  ],
+  "recognition": [
+    {
+      "authority_id": "did:web:media-registry.example",
+      "recognized_authority_id": "did:web:issuer.example",
+      "context": {
+        "credential_type": "vc:creator-identity"
+      },
+      "recognized": true,
+      "policy_epoch": "2026-Q1"
+    }
+  ],
+  "signature": {
+    "algorithm": "Ed25519",
+    "key_id": "media-registry-snapshot-key-1",
+    "value": "u08kwpkq9JSIacbFPLNL8EcNFgjK08gy+78P7aiiM43BYBand7v/cQAYXSJO/AAIu/pxKDfmJzh6u0LmtYNDDA=="
+  }
+}

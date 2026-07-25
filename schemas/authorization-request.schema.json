@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "entity_id",
+    "authority_id",
+    "action",
+    "resource"
+  ],
+  "properties": {
+    "entity_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "context": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://example.org/cawg-trqp/schemas/authorization-request.schema.json"
+}

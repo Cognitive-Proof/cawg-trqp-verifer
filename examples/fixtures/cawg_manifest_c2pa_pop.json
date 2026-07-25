@@ -1,0 +1,59 @@
+{
+  "asset": {
+    "id": "asset-004",
+    "mime_type": "image/jpeg"
+  },
+  "manifest_store": {
+    "asset_id": "asset-004",
+    "active_manifest": "urn:uuid:manifest-pop-1",
+    "manifests": {
+      "urn:uuid:manifest-pop-1": {
+        "claim_generator": "cawg-trqp-refimpl/0.7.0",
+        "signature_info": {
+          "alg": "Ed25519",
+          "issuer": "did:web:issuer.example"
+        },
+        "assertions": [
+          {
+            "label": "cawg.actions",
+            "data": {
+              "actor": {
+                "id": "did:web:publisher.example"
+              },
+              "issuer_id": "did:web:issuer.example",
+              "credential_type": "vc:creator-identity",
+              "action": "publish",
+              "resource": "cawg:news-content",
+              "jurisdiction": "IN",
+              "risk_tier": "medium",
+              "content_type": "image"
+            }
+          },
+          {
+            "label": "cawg.process.proof",
+            "data": {
+              "verified": true,
+              "process_type": "human_assisted",
+              "confidence": 0.92,
+              "evidence_ref": "urn:example:pop:asset-004",
+              "evidence_format": "application/cpop+cbor",
+              "appraisal": "writers_authenticity_report",
+              "reference": "https://github.com/LF-Decentralized-Trust-labs/proof-of-process"
+            }
+          }
+        ],
+        "ingredients": [
+          {
+            "title": "wire-service-source"
+          }
+        ],
+        "parent_claims": [
+          {
+            "manifest": "urn:uuid:manifest-parent-1"
+          }
+        ],
+        "integrity_status": "verified"
+      }
+    }
+  }
+}

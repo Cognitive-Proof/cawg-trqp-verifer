@@ -1,0 +1,170 @@
+{
+  "asset_integrity": "verified",
+  "assertion_binding": "verified",
+  "issuer_recognition": "recognized",
+  "actor_authorization": "authorized",
+  "process_integrity": "verified_high",
+  "policy_freshness": "fresh",
+  "verification_mode": "online_full",
+  "trust_outcome": "trusted",
+  "process_appraisal": {
+    "status": "verified",
+    "process_type": "human_assisted",
+    "confidence": 0.91,
+    "minimum_confidence": 0.75,
+    "evidence_ref": "urn:example:pop:asset-001",
+    "evidence_format": "application/cpop+cbor",
+    "appraisal": "writers_authenticity_report",
+    "reference": "https://github.com/LF-Decentralized-Trust-labs/proof-of-process"
+  },
+  "policy_evidence": {
+    "authorization_evidence": [
+      "registry-entry:publisher-123",
+      "policy:media-publish-v2"
+    ],
+    "recognition_evidence": [
+      "trust-list:issuer-77"
+    ],
+    "policy_epoch": "2026-Q1",
+    "policy_requirements": {
+      "requires_process_proof": true,
+      "min_process_integrity": 0.75,
+      "allowed_process_types": [
+        "human_assisted",
+        "verified_editorial_pipeline"
+      ]
+    },
+    "verification_profile": {
+      "id": "high_assurance",
+      "base_profile": "high_assurance",
+      "controls": {
+        "authority": {
+          "trust_anchors_required": true,
+          "allow_untrusted": false
+        },
+        "freshness": {
+          "max_age_seconds": 300,
+          "require_live": true
+        },
+        "revocation": {
+          "mode": "live",
+          "hard_fail": true,
+          "max_age_seconds": 300,
+          "enforcement": "fail",
+          "delta_channel_required": true
+        },
+        "failure": {
+          "network_failure": "fail_closed",
+          "policy_unavailable": "fail_closed"
+        },
+        "evidence": {
+          "emit_audit_bundle": true,
+          "require_attestation": true,
+          "require_feed_descriptors": true
+        },
+        "descriptor_policy": {
+          "policy": "fail",
+          "revocation": "fail",
+          "snapshot": "warn",
+          "gateway_route": "fail"
+        },
+        "transport": {
+          "mode": "http",
+          "integrity": "tls",
+          "availability_requirement": "required"
+        },
+        "determinism": {
+          "replayable": true,
+          "require_pinned_feeds": true
+        }
+      },
+      "overlays": [],
+      "source": "profiles/high_assurance.json"
+    },
+    "transport": {
+      "required": {
+        "mode": "http",
+        "integrity": "tls",
+        "availability_requirement": "required"
+      },
+      "actual": {
+        "mode": "http",
+        "integrity": "tls",
+        "available": true,
+        "channel": "delta"
+      },
+      "violations": [],
+      "satisfied": true
+    },
+    "revocation_status": {
+      "source": "service",
+      "issued_at": "2026-12-31T00:00:00Z",
+      "policy_epoch": "2026-Q1",
+      "channel": "delta",
+      "age_seconds": 0,
+      "feed_descriptor": {
+        "descriptor_id": "urn:trqp:feed-descriptor:revocation:2026-q1",
+        "feed_type": "revocation_feed",
+        "authority_id": "did:web:media-registry.example",
+        "route_attested": true,
+        "integrity_ok": true,
+        "authority_ok": true,
+        "signature_ok": true,
+        "freshness_ok": true,
+        "reason_code": "fresh",
+        "violations": [],
+        "digest_sha256": "94c13171b7205566ba18ae6fc467d4c12c2d69919689cc73828a535fcc6185e4",
+        "declared_digest_sha256": "94c13171b7205566ba18ae6fc467d4c12c2d69919689cc73828a535fcc6185e4",
+        "issued_at": "2026-04-27T00:00:00Z",
+        "valid_until": "2027-04-27T00:00:00Z",
+        "max_age_seconds": 86400
+      },
+      "freshness_ok": true,
+      "max_age_seconds": 300,
+      "enforcement": "fail",
+      "violations": []
+    },
+    "feed_descriptors": {
+      "policy": {
+        "descriptor_id": "urn:trqp:feed-descriptor:policy:2026-q1",
+        "feed_type": "policy_feed",
+        "authority_id": "did:web:media-registry.example",
+        "route_attested": true,
+        "integrity_ok": true,
+        "authority_ok": true,
+        "signature_ok": true,
+        "freshness_ok": true,
+        "reason_code": "fresh",
+        "violations": [],
+        "digest_sha256": "143e3e4f2a93645f7284652f42b93e0d018fb401eac5da03390a1d84a272196c",
+        "declared_digest_sha256": "143e3e4f2a93645f7284652f42b93e0d018fb401eac5da03390a1d84a272196c",
+        "issued_at": "2026-04-27T00:00:00Z",
+        "valid_until": "2027-04-27T00:00:00Z",
+        "max_age_seconds": 86400
+      },
+      "revocation": {
+        "descriptor_id": "urn:trqp:feed-descriptor:revocation:2026-q1",
+        "feed_type": "revocation_feed",
+        "authority_id": "did:web:media-registry.example",
+        "route_attested": true,
+        "integrity_ok": true,
+        "authority_ok": true,
+        "signature_ok": true,
+        "freshness_ok": true,
+        "reason_code": "fresh",
+        "violations": [],
+        "digest_sha256": "94c13171b7205566ba18ae6fc467d4c12c2d69919689cc73828a535fcc6185e4",
+        "declared_digest_sha256": "94c13171b7205566ba18ae6fc467d4c12c2d69919689cc73828a535fcc6185e4",
+        "issued_at": "2026-04-27T00:00:00Z",
+        "valid_until": "2027-04-27T00:00:00Z",
+        "max_age_seconds": 86400
+      }
+    }
+  },
+  "gateway_mediation": {},
+  "explanations": [
+    "Verification profile: high_assurance",
+    "Live authorization lookup executed",
+    "Live recognition lookup executed"
+  ]
+}

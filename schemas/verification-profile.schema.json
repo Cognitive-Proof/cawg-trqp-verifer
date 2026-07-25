@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sankarshanmukhopadhyay.github.io/cawg-trqp-verifier-refimpl/schemas/verification-profile.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "base_profile",
+    "controls",
+    "overlays",
+    "source"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]*$"
+    },
+    "base_profile": {
+      "enum": [
+        "edge",
+        "standard",
+        "high_assurance"
+      ]
+    },
+    "controls": {
+      "type": "object",
+      "required": [
+        "authority",
+        "freshness",
+        "revocation",
+        "failure",
+        "evidence",
+        "descriptor_policy",
+        "transport",
+        "determinism"
+      ],
+      "properties": {
+        "authority": {
+          "type": "object",
+          "required": [
+            "trust_anchors_required",
+            "allow_untrusted"
+          ],
+          "properties": {
+            "trust_anchors_required": {
+              "type": "boolean"
+            },
+            "allow_untrusted": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "freshness": {
+          "type": "object",
+          "required": [
+            "max_age_seconds",
+            "require_live"
+          ],
+          "properties": {
+            "max_age_seconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "require_live": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "revocation": {
+          "type": "object",
+          "required": [
+            "mode",
+            "hard_fail",
+            "max_age_seconds",
+            "enforcement",
+            "delta_channel_required"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "snapshot",
+                "delta",
+                "live"
+              ]
+            },
+            "hard_fail": {
+              "type": "boolean"
+            },
+            "max_age_seconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "enforcement": {
+              "enum": [
+                "warn",
+                "fail"
+              ]
+            },
+            "delta_channel_required": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "failure": {
+          "type": "object",
+          "required": [
+            "network_failure",
+            "policy_unavailable"
+          ],
+          "properties": {
+            "network_failure": {
+              "enum": [
+                "fail_open",
+                "fail_closed"
+              ]
+            },
+            "policy_unavailable": {
+              "enum": [
+                "fail_open",
+                "fail_closed"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "evidence": {
+          "type": "object",
+          "required": [
+            "emit_audit_bundle",
+            "require_attestation",
+            "require_feed_descriptors"
+          ],
+          "properties": {
+            "emit_audit_bundle": {
+              "type": "boolean"
+            },
+            "require_attestation": {
+              "type": "boolean"
+            },
+            "require_feed_descriptors": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "descriptor_policy": {
+          "type": "object",
+          "required": [
+            "policy",
+            "revocation",
+            "snapshot",
+            "gateway_route"
+          ],
+          "properties": {
+            "policy": {
+              "enum": [
+                "observe",
+                "warn",
+                "fail"
+              ]
+            },
+            "revocation": {
+              "enum": [
+                "observe",
+                "warn",
+                "fail"
+              ]
+            },
+            "snapshot": {
+              "enum": [
+                "observe",
+                "warn",
+                "fail"
+              ]
+            },
+            "gateway_route": {
+              "enum": [
+                "observe",
+                "warn",
+                "fail"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "determinism": {
+          "type": "object",
+          "required": [
+            "replayable",
+            "require_pinned_feeds"
+          ],
+          "properties": {
+            "replayable": {
+              "type": "boolean"
+            },
+            "require_pinned_feeds": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "transport": {
+          "type": "object",
+          "required": [
+            "mode",
+            "integrity",
+            "availability_requirement"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "http",
+                "gateway",
+                "local"
+              ]
+            },
+            "integrity": {
+              "enum": [
+                "none",
+                "tls",
+                "signed"
+              ]
+            },
+            "availability_requirement": {
+              "enum": [
+                "best_effort",
+                "required"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "overlays": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "source": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

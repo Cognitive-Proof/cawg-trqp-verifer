@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "authorized"
+  ],
+  "properties": {
+    "authorized": {
+      "type": "boolean"
+    },
+    "expires": {
+      "type": "string"
+    },
+    "policy_epoch": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reason": {
+      "type": "string"
+    },
+    "policy_requirements": {
+      "type": "object"
+    }
+  },
+  "$id": "https://example.org/cawg-trqp/schemas/authorization-response.schema.json",
+  "additionalProperties": false
+}

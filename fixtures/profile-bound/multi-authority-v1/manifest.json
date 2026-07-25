@@ -1,0 +1,24 @@
+{
+  "fixture_id": "multi-authority-v1",
+  "description": "Canonical gateway-mediated fixture showing deterministic route selection across multiple trust authorities.",
+  "profile": "standard",
+  "verification_mode": "gateway_mediated",
+  "determinism": true,
+  "inputs": {
+    "request": "request.json",
+    "resolved_profile": "resolved_profile.json",
+    "expected_result": "expected_result.json",
+    "policy_feed": "pinned_feeds/policies.json",
+    "revocation_feed": "pinned_feeds/revocations.json"
+  },
+  "gateway": {
+    "gateway_id": "gateway:mesh",
+    "route_label": "route:coalition-eu",
+    "target_authority_id": "did:web:coalition-registry.example"
+  },
+  "replay_contract": {
+    "transport_verified": true,
+    "revocation_freshness_evaluated": true,
+    "pinned_feeds_required": false
+  }
+}
