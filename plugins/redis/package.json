@@ -1,0 +1,25 @@
+{
+  "name": "@cognitiveproof/cawg-trqp-plugin-redis",
+  "version": "0.1.0",
+  "description": "Redis-backed DecisionCache and RevocationDeltaStore for cawg-trqp-refimpl",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cognitiveproof/cawg-trqp-plugin-types": "^0.1.0",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
+  }
+}

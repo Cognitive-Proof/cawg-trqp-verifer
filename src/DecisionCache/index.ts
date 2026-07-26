@@ -1,21 +1,14 @@
+// DecisionCache is defined in @cognitiveproof/cawg-trqp-plugin-types (the shared contract
+// package plugin authors depend on) - re-exported here so existing internal
+// imports (`from "./DecisionCache/index.js"`) keep working unchanged.
+export type { DecisionCache } from "@cognitiveproof/cawg-trqp-plugin-types";
+import type { DecisionCache } from "@cognitiveproof/cawg-trqp-plugin-types";
+
 const TTL_BY_CLASS: Record<string, number> = {
   short: 300,
   medium: 3600,
   long: 86400,
 };
-
-/**
- * Contract for anything that can cache verifier decisions. Async because a
- * real implementation (Redis, Memcached, some other shared store) has to do
- * network I/O; TTLCache below is a purely in-memory adapter whose methods
- * happen to resolve instantly, but callers must always await them so a
- * distributed implementation is a true drop-in replacement.
- */
-export interface DecisionCache<T = unknown> {
-  set(key: string, value: T, ttlClass?: string): Promise<void>;
-  get(key: string): Promise<T | undefined>;
-  invalidate(key: string): Promise<void>;
-}
 
 interface CacheEntry<T> {
   value: T;

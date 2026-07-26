@@ -1,5 +1,5 @@
 {
-  "name": "cawg-trqp-refimpl",
+  "name": "@cognitiveproof/cawg-trqp",
   "version": "0.17.0",
   "description": "Reference implementation for CAWG + TRQP integration (TypeScript port)",
   "type": "module",
@@ -8,12 +8,18 @@
   "bin": {
     "cawg-trqp-verifier": "dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
+  "workspaces": [
+    "plugins/*"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run build -w @cognitiveproof/cawg-trqp-plugin-types && tsc -p tsconfig.json",
     "verify": "tsx src/cli.ts",
     "serve": "tsx scripts/start_http_service.ts",
-    "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "test": "vitest run && npm run test --workspaces --if-present",
+    "typecheck": "npm run build -w @cognitiveproof/cawg-trqp-plugin-types && npm run typecheck --workspaces --if-present && tsc -p tsconfig.typecheck.json",
     "demo": "tsx scripts/run_demo.ts",
     "validate:examples": "tsx scripts/validate_examples.ts",
     "validate:feed-descriptors": "tsx scripts/validate_feed_descriptors.ts",
@@ -29,8 +35,29 @@
   "dependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
+    "@cognitiveproof/cawg-trqp-plugin-types": "^0.1.0",
     "commander": "^12.1.0",
     "express": "^4.21.2"
+  },
+  "peerDependencies": {
+    "@cognitiveproof/cawg-trqp-plugin-mongodb": "^0.1.0",
+    "@cognitiveproof/cawg-trqp-plugin-mysql": "^0.1.0",
+    "@cognitiveproof/cawg-trqp-plugin-postgres": "^0.1.0",
+    "@cognitiveproof/cawg-trqp-plugin-redis": "^0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@cognitiveproof/cawg-trqp-plugin-mongodb": {
+      "optional": true
+    },
+    "@cognitiveproof/cawg-trqp-plugin-mysql": {
+      "optional": true
+    },
+    "@cognitiveproof/cawg-trqp-plugin-postgres": {
+      "optional": true
+    },
+    "@cognitiveproof/cawg-trqp-plugin-redis": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

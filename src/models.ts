@@ -22,47 +22,12 @@ export function createVerificationRequest(
   };
 }
 
-export interface AuthorizationResponse {
-  authorized: boolean;
-  expires: string | null;
-  policy_epoch: string | null;
-  evidence: string[];
-  reason: string | null;
-  policy_requirements: Record<string, unknown>;
-}
-
-export function createAuthorizationResponse(
-  fields: Partial<AuthorizationResponse> & Pick<AuthorizationResponse, "authorized">,
-): AuthorizationResponse {
-  return {
-    expires: null,
-    policy_epoch: null,
-    evidence: [],
-    reason: null,
-    policy_requirements: {},
-    ...fields,
-  };
-}
-
-export interface RecognitionResponse {
-  recognized: boolean;
-  expires: string | null;
-  policy_epoch: string | null;
-  evidence: string[];
-  reason: string | null;
-}
-
-export function createRecognitionResponse(
-  fields: Partial<RecognitionResponse> & Pick<RecognitionResponse, "recognized">,
-): RecognitionResponse {
-  return {
-    expires: null,
-    policy_epoch: null,
-    evidence: [],
-    reason: null,
-    ...fields,
-  };
-}
+// AuthorizationResponse/RecognitionResponse are defined in
+// @cognitiveproof/cawg-trqp-plugin-types (the shared contract package plugin authors depend
+// on) - re-exported here so existing internal imports (`from "./models.js"`)
+// keep working unchanged.
+export type { AuthorizationResponse, RecognitionResponse } from "@cognitiveproof/cawg-trqp-plugin-types";
+export { createAuthorizationResponse, createRecognitionResponse } from "@cognitiveproof/cawg-trqp-plugin-types";
 
 export interface VerificationResult {
   asset_integrity: string;

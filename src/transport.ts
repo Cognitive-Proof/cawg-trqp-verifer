@@ -1,34 +1,15 @@
+// FeedTransportMetadata is defined in @cognitiveproof/cawg-trqp-plugin-types (the shared
+// contract package plugin authors depend on) - re-exported here so existing
+// internal imports (`from "./transport.js"`) keep working unchanged.
+export type { FeedTransportMetadata } from "@cognitiveproof/cawg-trqp-plugin-types";
+export { createFeedTransportMetadata, feedTransportMetadataToDict } from "@cognitiveproof/cawg-trqp-plugin-types";
+import type { FeedTransportMetadata } from "@cognitiveproof/cawg-trqp-plugin-types";
+
 export class TransportConstraintError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "TransportConstraintError";
   }
-}
-
-export interface FeedTransportMetadata {
-  mode: string;
-  integrity: string;
-  available: boolean;
-  channel: string;
-}
-
-export function createFeedTransportMetadata(
-  fields: Partial<FeedTransportMetadata> & Pick<FeedTransportMetadata, "mode" | "integrity">,
-): FeedTransportMetadata {
-  return {
-    available: true,
-    channel: "full",
-    ...fields,
-  };
-}
-
-export function feedTransportMetadataToDict(metadata: FeedTransportMetadata): Record<string, unknown> {
-  return {
-    mode: metadata.mode,
-    integrity: metadata.integrity,
-    available: metadata.available,
-    channel: metadata.channel,
-  };
 }
 
 export function evaluateTransportConstraints(
