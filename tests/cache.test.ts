@@ -1,29 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { TTLCache } from "../src/cache.js";
+import { TTLCache } from "../src/DecisionCache/index.js";
 
 describe("TTLCache", () => {
-  it("sets and gets values", () => {
+  it("sets and gets values", async () => {
     const cache = new TTLCache();
-    cache.set("k", { x: 1 }, "medium");
-    expect(cache.get("k")).toEqual({ x: 1 });
+    await cache.set("k", { x: 1 }, "medium");
+    expect(await cache.get("k")).toEqual({ x: 1 });
   });
 
-  it("evicts least recently used when maxsize reached", () => {
+  it("evicts least recently used when maxsize reached", async () => {
     const cache = new TTLCache(2);
-    cache.set("a", 1);
-    cache.set("b", 2);
-    expect(cache.get("a")).toBe(1);
-    cache.set("c", 3);
-    expect(cache.get("a")).toBe(1);
-    expect(cache.get("b")).toBeUndefined();
-    expect(cache.get("c")).toBe(3);
+    await cache.set("a", 1);
+    await cache.set("b", 2);
+    expect(await cache.get("a")).toBe(1);
+    await cache.set("c", 3);
+    expect(await cache.get("a")).toBe(1);
+    expect(await cache.get("b")).toBeUndefined();
+    expect(await cache.get("c")).toBe(3);
   });
 
-  it("tracks metrics and clears", () => {
+  it("tracks metrics and clears", async () => {
     const cache = new TTLCache(2);
-    expect(cache.get("missing")).toBeUndefined();
-    cache.set("a", 1);
-    expect(cache.get("a")).toBe(1);
+    expect(await cache.get("missing")).toBeUndefined();
+    await cache.set("a", 1);
+    expect(await cache.get("a")).toBe(1);
     const stats = cache.stats();
     expect(stats.hits).toBe(1);
     expect(stats.misses).toBe(1);

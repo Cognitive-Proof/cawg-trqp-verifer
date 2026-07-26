@@ -1,6 +1,6 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { auditBundleToDict, buildAuditBundle } from "./audit.js";
-import { TTLCache } from "./cache.js";
+import { TTLCache, type DecisionCache } from "./DecisionCache/index.js";
 import { TrustGateway } from "./gateway.js";
 import type { PolicyService } from "./policy_service.js";
 import { createVerificationRequest, type AuthorizationResponse, type RecognitionResponse } from "./models.js";
@@ -14,6 +14,7 @@ const MAX_REQUEST_BYTES = 64 * 1024;
 export interface HTTPTRQPServiceOptions {
   gatewayId?: string;
   routeLabel?: string;
+  cache?: DecisionCache<Record<string, unknown>>;
 }
 
 /** Wraps any async handler so a rejected promise reaches Express's error middleware
@@ -29,7 +30,7 @@ function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
 export class HTTPTRQPService {
   readonly service: PolicyService;
   readonly gateway: TrustGateway;
-  readonly cache: TTLCache;
+  readonly cache: DecisionCache<Record<string, unknown>>;
   readonly verifier: Verifier;
   readonly gatewayVerifier: Verifier;
   readonly app: Express;
@@ -43,7 +44,7 @@ export class HTTPTRQPService {
     // Long-lived L1 cache and verifier instances preserve cache semantics across
     // HTTP requests. Production deployments can replace this adapter with a
     // shared DecisionCache implementation.
-    this.cache = new TTLCache(4096);
+    this.cache = options.cache ?? new TTLCache<Record<string, unknown>>(4096);
     this.verifier = new Verifier({ service: this.service, cache: this.cache });
     this.gatewayVerifier = new Verifier({ service: this.service, gateway: this.gateway, cache: this.cache });
     this.app = express();

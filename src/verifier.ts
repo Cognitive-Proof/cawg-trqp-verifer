@@ -1,4 +1,4 @@
-import { TTLCache } from "./cache.js";
+import { TTLCache, type DecisionCache } from "./DecisionCache/index.js";
 import { tupleKey } from "./context.js";
 import {
   createVerificationResult,
@@ -39,14 +39,14 @@ export class RevocationDelta {
 export interface VerifierOptions {
   service?: PolicyService | null;
   snapshot?: SnapshotStore | null;
-  cache?: TTLCache | null;
+  cache?: DecisionCache<Record<string, unknown>> | null;
   gateway?: TrustGateway | null;
 }
 
 export class Verifier {
   service: PolicyService | null;
   snapshot: SnapshotStore | null;
-  cache: TTLCache;
+  cache: DecisionCache<Record<string, unknown>>;
   gateway: TrustGateway | null;
   revocationDelta: RevocationDelta | null = null;
   lastTransportMetadata: Record<string, unknown> = {};
@@ -56,7 +56,7 @@ export class Verifier {
   constructor(options: VerifierOptions = {}) {
     this.service = options.service ?? null;
     this.snapshot = options.snapshot ?? null;
-    this.cache = options.cache ?? new TTLCache();
+    this.cache = options.cache ?? new TTLCache<Record<string, unknown>>();
     this.gateway = options.gateway ?? null;
   }
 
@@ -432,8 +432,8 @@ export class Verifier {
       return this.transportOrRevocationFailureResult(profile, "revocation_stale", revocationFailures.join("; "));
     }
 
-    let auth = forceLive ? null : ((this.cache.get(authKey) as Record<string, unknown> | undefined) ?? null);
-    let rec = forceLive ? null : ((this.cache.get(recKey) as Record<string, unknown> | undefined) ?? null);
+    let auth = forceLive ? null : ((await this.cache.get(authKey)) ?? null);
+    let rec = forceLive ? null : ((await this.cache.get(recKey)) ?? null);
     const explanations = [`Verification profile: ${profile.id}`];
     let gatewayMediation: Record<string, unknown> = {};
     if (revocationFailures.length) {
@@ -465,7 +465,7 @@ export class Verifier {
         )) as unknown as Record<string, unknown>;
         explanations.push("Live authorization lookup executed");
       }
-      this.cache.set(authKey, auth, "medium");
+      await this.cache.set(authKey, auth, "medium");
     } else {
       explanations.push("Authorization cache hit");
     }
@@ -476,14 +476,14 @@ export class Verifier {
           const [recResult, recMediation] = await this.gateway.recognition(request.authority_id, request.issuer_id, recContext);
           rec = recResult;
           gatewayMediation = { ...gatewayMediation, recognition: recMediation };
-          this.cache.set(recKey, rec, "medium");
+          await this.cache.set(recKey, rec, "medium");
           explanations.push("Trust gateway mediated recognition lookup");
         } else if (this.service !== null) {
           rec = (await this.service.recognition(request.authority_id, request.issuer_id, recContext)) as unknown as Record<
             string,
             unknown
           >;
-          this.cache.set(recKey, rec, "medium");
+          await this.cache.set(recKey, rec, "medium");
           explanations.push("Live recognition lookup executed");
         }
       } else {

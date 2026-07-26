@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { TTLCache } from "../src/DecisionCache/index.js";
 import { HTTPTRQPService } from "../src/http_service.js";
 import { MockTRQPService } from "../src/mock_service.js";
 
@@ -15,7 +16,8 @@ async function withServer<T>(service: HTTPTRQPService, fn: (baseUrl: string) => 
 
 describe("HTTP cache lifecycle", () => {
   it("reuses the cache across requests", async () => {
-    const service = new HTTPTRQPService(new MockTRQPService("data/policies.json", "data/revocations.json"));
+    const cache = new TTLCache<Record<string, unknown>>();
+    const service = new HTTPTRQPService(new MockTRQPService("data/policies.json", "data/revocations.json"), { cache });
     const payload = readFileSync("examples/verification_request.json", "utf-8");
     await withServer(service, async (baseUrl) => {
       const first = await fetch(`${baseUrl}/trqp/verify`, {
@@ -30,7 +32,7 @@ describe("HTTP cache lifecycle", () => {
       });
       expect(first.status).toBe(200);
       expect(second.status).toBe(200);
-      expect(service.cache.stats().hits).toBeGreaterThanOrEqual(1);
+      expect(cache.stats().hits).toBeGreaterThanOrEqual(1);
       const secondBody = (await second.json()) as any;
       expect(secondBody.explanations).toContain("Authorization cache hit");
     });

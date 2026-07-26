@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { TTLCache } from "../src/cache.js";
+import { TTLCache } from "../src/DecisionCache/index.js";
 import { TrustGateway } from "../src/gateway.js";
 import { CAWGManifestParser } from "../src/manifest_parser.js";
 import { createVerificationRequest, type VerificationRequest, verificationResultToDict } from "../src/models.js";
@@ -24,7 +24,7 @@ describe("standard profile conformance", () => {
 
   it("reuses the cache on a second lookup", async () => {
     const data = loadRequestData();
-    const cache = new TTLCache();
+    const cache = new TTLCache<Record<string, unknown>>();
     const service = new MockTRQPService("data/policies.json", "data/revocations.json", {
       policyDescriptorPath: "examples/feed_descriptors/policy-feed.signed.json",
       revocationDescriptorPath: "examples/feed_descriptors/revocation-feed.signed.json",
@@ -62,7 +62,7 @@ describe("edge profile conformance", () => {
 describe("high assurance profile conformance", () => {
   it("always performs a live lookup", async () => {
     const data = loadRequestData();
-    const cache = new TTLCache();
+    const cache = new TTLCache<Record<string, unknown>>();
     const service = new MockTRQPService("data/policies.json", "data/revocations.json", {
       policyDescriptorPath: "examples/feed_descriptors/policy-feed.signed.json",
       revocationDescriptorPath: "examples/feed_descriptors/revocation-feed.signed.json",

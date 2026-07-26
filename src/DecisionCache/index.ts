@@ -5,34 +5,36 @@ const TTL_BY_CLASS: Record<string, number> = {
 };
 
 /**
- * Minimal cache contract used by the verifier. Implementations may be
- * in-process or distributed, but must preserve deterministic keys and
- * bounded expiry semantics.
+ * Contract for anything that can cache verifier decisions. Async because a
+ * real implementation (Redis, Memcached, some other shared store) has to do
+ * network I/O; TTLCache below is a purely in-memory adapter whose methods
+ * happen to resolve instantly, but callers must always await them so a
+ * distributed implementation is a true drop-in replacement.
  */
-export interface DecisionCache {
-  set(key: string, value: unknown, ttlClass?: string): void;
-  get(key: string): unknown | undefined;
-  invalidate(key: string): void;
+export interface DecisionCache<T = unknown> {
+  set(key: string, value: T, ttlClass?: string): Promise<void>;
+  get(key: string): Promise<T | undefined>;
+  invalidate(key: string): Promise<void>;
 }
 
-interface CacheEntry {
-  value: unknown;
+interface CacheEntry<T> {
+  value: T;
   cachedAt: number;
   expiresAt: number;
   ttlClass: string;
 }
 
 /** Explicit cache-disabled adapter for live-only deployments and tests. */
-export class NoOpDecisionCache implements DecisionCache {
-  set(_key: string, _value: unknown, _ttlClass = "medium"): void {
+export class NoOpDecisionCache<T = unknown> implements DecisionCache<T> {
+  async set(_key: string, _value: T, _ttlClass = "medium"): Promise<void> {
     return undefined;
   }
 
-  get(_key: string): undefined {
+  async get(_key: string): Promise<undefined> {
     return undefined;
   }
 
-  invalidate(_key: string): void {
+  async invalidate(_key: string): Promise<void> {
     return undefined;
   }
 }
@@ -49,13 +51,16 @@ export interface CacheStats {
 
 /**
  * Bounded LRU cache with simple operational metrics. This is an L1 reference
- * adapter. Production deployments may replace it with a shared L2
- * implementation that satisfies DecisionCache. Node is single-threaded, so
- * unlike the Python TTLCache this needs no lock.
+ * adapter - in-process only (see NOTE on statelessness across instances).
+ * Production deployments spanning multiple instances should replace it with
+ * a shared implementation of DecisionCache (Redis, etc.); Verifier and
+ * HTTPTRQPService only depend on the DecisionCache interface, so any such
+ * implementation is a drop-in replacement. Node is single-threaded, so unlike
+ * the Python TTLCache this needs no lock.
  */
-export class TTLCache implements DecisionCache {
+export class TTLCache<T = unknown> implements DecisionCache<T> {
   readonly maxsize: number;
-  private store: Map<string, CacheEntry> = new Map();
+  private store: Map<string, CacheEntry<T>> = new Map();
   private hits = 0;
   private misses = 0;
   private evictions = 0;
@@ -68,7 +73,7 @@ export class TTLCache implements DecisionCache {
     this.maxsize = maxsize;
   }
 
-  get cache(): Map<string, CacheEntry> {
+  get cache(): Map<string, CacheEntry<T>> {
     return this.store;
   }
 
@@ -92,7 +97,7 @@ export class TTLCache implements DecisionCache {
     }
   }
 
-  set(key: string, value: unknown, ttlClass = "medium"): void {
+  async set(key: string, value: T, ttlClass = "medium"): Promise<void> {
     const ttlSeconds = TTL_BY_CLASS[ttlClass] ?? TTL_BY_CLASS.medium;
     const now = Date.now() / 1000;
     this.store.delete(key);
@@ -105,7 +110,7 @@ export class TTLCache implements DecisionCache {
     this.evictIfNeeded();
   }
 
-  get(key: string): unknown | undefined {
+  async get(key: string): Promise<T | undefined> {
     const entry = this.store.get(key);
     if (entry === undefined) {
       this.misses += 1;
@@ -124,7 +129,7 @@ export class TTLCache implements DecisionCache {
     return entry.value;
   }
 
-  invalidate(key: string): void {
+  async invalidate(key: string): Promise<void> {
     this.store.delete(key);
   }
 
