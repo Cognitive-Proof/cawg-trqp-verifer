@@ -53,7 +53,7 @@ describe("Verifier", () => {
   it("applies a revocation delta to reject a previously-authorized entity", async () => {
     const req = loadManifestFixture("examples/fixtures/cawg_manifest_minimal.json", "did:web:media-registry.example");
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    verifier.applyRevocationDelta([req.entity_id], "2026-Q2");
+    await verifier.applyRevocationDelta([req.entity_id], "2026-Q2");
     const result = await verifier.verify(req, "standard");
     expect(result.trust_outcome).toBe("rejected");
     expect(result.policy_freshness).toBe("revoked");

@@ -16,6 +16,7 @@ export * from "./privacy.js";
 export * from "./profile.js";
 export * from "./redaction.js";
 export * from "./replay.js";
+export * from "./RevocationDeltaStore/index.js";
 export * from "./snapshot.js";
 export * from "./transport.js";
 export * from "./validation.js";

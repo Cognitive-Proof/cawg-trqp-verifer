@@ -1,4 +1,5 @@
 import { TTLCache, type DecisionCache } from "./DecisionCache/index.js";
+import { InMemoryRevocationDeltaStore, type RevocationDeltaStore } from "./RevocationDeltaStore/index.js";
 import { tupleKey } from "./context.js";
 import {
   createVerificationResult,
@@ -16,31 +17,12 @@ import {
   type FeedTransportMetadata,
 } from "./transport.js";
 
-/** Model for revocation delta updates. */
-export class RevocationDelta {
-  readonly revokedEntities: Set<string>;
-  readonly policyEpoch: string | null;
-  readonly timestamp: string;
-
-  constructor(revokedEntities: string[], policyEpoch: string | null = null) {
-    this.revokedEntities = new Set(revokedEntities);
-    this.policyEpoch = policyEpoch;
-    this.timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-  }
-
-  apply(entityId: string): [boolean, string | null] {
-    if (this.revokedEntities.has(entityId)) {
-      return [true, `revoked_in_epoch_${this.policyEpoch ?? "unknown"}`];
-    }
-    return [false, null];
-  }
-}
-
 export interface VerifierOptions {
   service?: PolicyService | null;
   snapshot?: SnapshotStore | null;
   cache?: DecisionCache<Record<string, unknown>> | null;
   gateway?: TrustGateway | null;
+  revocationDeltaStore?: RevocationDeltaStore | null;
 }
 
 export class Verifier {
@@ -48,7 +30,7 @@ export class Verifier {
   snapshot: SnapshotStore | null;
   cache: DecisionCache<Record<string, unknown>>;
   gateway: TrustGateway | null;
-  revocationDelta: RevocationDelta | null = null;
+  revocationDeltaStore: RevocationDeltaStore;
   lastTransportMetadata: Record<string, unknown> = {};
   lastRevocationStatus: Record<string, unknown> = {};
   lastFeedDescriptorEvidence: Record<string, unknown> = {};
@@ -58,10 +40,11 @@ export class Verifier {
     this.snapshot = options.snapshot ?? null;
     this.cache = options.cache ?? new TTLCache<Record<string, unknown>>();
     this.gateway = options.gateway ?? null;
+    this.revocationDeltaStore = options.revocationDeltaStore ?? new InMemoryRevocationDeltaStore();
   }
 
-  applyRevocationDelta(revokedEntities: string[], policyEpoch: string | null = null): void {
-    this.revocationDelta = new RevocationDelta(revokedEntities, policyEpoch);
+  async applyRevocationDelta(revokedEntities: string[], policyEpoch: string | null = null): Promise<void> {
+    await this.revocationDeltaStore.set(revokedEntities, policyEpoch);
   }
 
   async verify(request: VerificationRequest, profile: ProfileInput = "standard"): Promise<VerificationResult> {
@@ -80,32 +63,30 @@ export class Verifier {
       });
     }
 
-    if (this.revocationDelta !== null) {
-      const [isRevoked, reason] = this.revocationDelta.apply(request.entity_id);
-      if (isRevoked) {
-        this.lastRevocationStatus = {
-          status: "revoked",
-          source: "delta_cache",
-          policy_epoch: this.revocationDelta.policyEpoch,
-          freshness_ok: true,
-        };
-        return createVerificationResult({
-          asset_integrity: "verified",
-          assertion_binding: "verified",
-          issuer_recognition: "unknown",
-          actor_authorization: "not_authorized",
-          process_integrity: "not_evaluated",
-          policy_freshness: "revoked",
-          verification_mode: "revocation_check",
-          trust_outcome: "rejected",
-          explanations: [`Entity revoked: ${reason}`, `Verification profile: ${resolvedProfile.id}`],
-          policy_evidence: {
-            verification_profile: verificationProfileToDict(resolvedProfile),
-            revocation_status: this.lastRevocationStatus,
-            feed_descriptors: this.lastFeedDescriptorEvidence,
-          },
-        });
-      }
+    const revocationCheck = await this.revocationDeltaStore.check(request.entity_id);
+    if (revocationCheck.revoked) {
+      this.lastRevocationStatus = {
+        status: "revoked",
+        source: "delta_cache",
+        policy_epoch: revocationCheck.policyEpoch,
+        freshness_ok: true,
+      };
+      return createVerificationResult({
+        asset_integrity: "verified",
+        assertion_binding: "verified",
+        issuer_recognition: "unknown",
+        actor_authorization: "not_authorized",
+        process_integrity: "not_evaluated",
+        policy_freshness: "revoked",
+        verification_mode: "revocation_check",
+        trust_outcome: "rejected",
+        explanations: [`Entity revoked: ${revocationCheck.reason}`, `Verification profile: ${resolvedProfile.id}`],
+        policy_evidence: {
+          verification_profile: verificationProfileToDict(resolvedProfile),
+          revocation_status: this.lastRevocationStatus,
+          feed_descriptors: this.lastFeedDescriptorEvidence,
+        },
+      });
     }
 
     const authKey = tupleKey(request.entity_id, request.authority_id, request.action, request.resource, request.context);
