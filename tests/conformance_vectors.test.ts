@@ -13,16 +13,16 @@ function loadRequestData(path = "examples/verification_request.json"): Verificat
 }
 
 describe("standard profile conformance", () => {
-  it("authorizes a standard trusted entity", () => {
+  it("authorizes a standard trusted entity", async () => {
     const data = loadRequestData();
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verificationResultToDict(verifier.verify(createVerificationRequest(data), "standard"));
+    const result = verificationResultToDict(await verifier.verify(createVerificationRequest(data), "standard"));
     expect(result.trust_outcome).toBe("trusted");
     expect(result.process_integrity).toBe("verified_high");
     expect((result.policy_evidence as any).authorization_evidence.length).toBeGreaterThan(0);
   });
 
-  it("reuses the cache on a second lookup", () => {
+  it("reuses the cache on a second lookup", async () => {
     const data = loadRequestData();
     const cache = new TTLCache();
     const service = new MockTRQPService("data/policies.json", "data/revocations.json", {
@@ -31,18 +31,18 @@ describe("standard profile conformance", () => {
     });
     const verifier = new Verifier({ service, cache });
 
-    const result1 = verifier.verify(createVerificationRequest(data), "standard");
+    const result1 = await verifier.verify(createVerificationRequest(data), "standard");
     expect(result1.explanations).toContain("Live authorization lookup executed");
 
-    const result2 = verifier.verify(createVerificationRequest(data), "standard");
+    const result2 = await verifier.verify(createVerificationRequest(data), "standard");
     expect(result2.explanations).toContain("Authorization cache hit");
     expect(result1.trust_outcome).toBe(result2.trust_outcome);
   });
 
-  it("rejects when the missing process proof is required", () => {
+  it("rejects when the missing process proof is required", async () => {
     const data = { ...loadRequestData(), process_evidence: null };
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json") });
-    const result = verifier.verify(createVerificationRequest(data), "standard");
+    const result = await verifier.verify(createVerificationRequest(data), "standard");
     expect(result.actor_authorization).toBe("authorized");
     expect(result.process_integrity).toBe("missing_required_proof");
     expect(result.trust_outcome).toBe("rejected");
@@ -50,17 +50,17 @@ describe("standard profile conformance", () => {
 });
 
 describe("edge profile conformance", () => {
-  it("authorizes from a verified snapshot", () => {
+  it("authorizes from a verified snapshot", async () => {
     const data = loadRequestData();
     const verifier = new Verifier({ snapshot: new SnapshotStore("data/snapshot.json", "data/trust_anchors.json") });
-    const result = verificationResultToDict(verifier.verify(createVerificationRequest(data), "edge"));
+    const result = verificationResultToDict(await verifier.verify(createVerificationRequest(data), "edge"));
     expect(result.trust_outcome).toBe("trusted_cached");
     expect(result.policy_freshness).toBe("snapshot_verified");
   });
 });
 
 describe("high assurance profile conformance", () => {
-  it("always performs a live lookup", () => {
+  it("always performs a live lookup", async () => {
     const data = loadRequestData();
     const cache = new TTLCache();
     const service = new MockTRQPService("data/policies.json", "data/revocations.json", {
@@ -68,33 +68,33 @@ describe("high assurance profile conformance", () => {
       revocationDescriptorPath: "examples/feed_descriptors/revocation-feed.signed.json",
     });
     const verifier = new Verifier({ service, cache });
-    verifier.verify(createVerificationRequest(data), "standard");
+    await verifier.verify(createVerificationRequest(data), "standard");
     expect(cache.cache.size).toBeGreaterThan(0);
 
     const verifier2 = new Verifier({ service, cache });
-    const result = verifier2.verify(createVerificationRequest(data), "high_assurance");
+    const result = await verifier2.verify(createVerificationRequest(data), "high_assurance");
     expect(result.verification_mode).toBe("online_full");
   });
 });
 
 describe("gateway vectors", () => {
-  it("verifies a gateway-mediated interoperability vector", () => {
+  it("verifies a gateway-mediated interoperability vector", async () => {
     const data: Record<string, unknown> = JSON.parse(readFileSync("examples/interoperability_vector_gateway.json", "utf-8"));
     delete data.use_gateway;
     delete data.profile;
     const service = new MockTRQPService("data/policies.json");
     const verifier = new Verifier({ service, gateway: new TrustGateway(service, { gatewayId: "gateway:interop" }) });
-    const result = verifier.verify(createVerificationRequest(data as unknown as VerificationRequest), "standard");
+    const result = await verifier.verify(createVerificationRequest(data as unknown as VerificationRequest), "standard");
     expect(result.verification_mode).toBe("gateway_mediated");
     expect((result.gateway_mediation as any).gateway_id).toBe("gateway:interop");
   });
 
-  it("verifies the benchmark fixtures", () => {
+  it("verifies the benchmark fixtures", async () => {
     const service = new MockTRQPService("data/policies.json");
     const verifier = new Verifier({ service });
     for (const path of ["examples/benchmark_high_volume_request.json", "examples/benchmark_constrained_device_request.json"]) {
       const data = JSON.parse(readFileSync(path, "utf-8"));
-      const result = verifier.verify(createVerificationRequest(data));
+      const result = await verifier.verify(createVerificationRequest(data));
       expect(result.trust_outcome).toBe("trusted");
     }
   });
@@ -114,7 +114,7 @@ describe("manifest parser conformance", () => {
 });
 
 describe("negative conformance vectors", () => {
-  it("rejects a gateway-required profile over plain HTTP transport", () => {
+  it("rejects a gateway-required profile over plain HTTP transport", async () => {
     const data = loadRequestData();
     const service = new MockTRQPService("data/policies.json", "data/revocations.json", { transportMode: "http" });
     const verifier = new Verifier({ service });
@@ -127,13 +127,13 @@ describe("negative conformance vectors", () => {
       overlays: [],
       source: "inline",
     };
-    const result = verifier.verify(createVerificationRequest(data), profile);
+    const result = await verifier.verify(createVerificationRequest(data), profile);
     expect(["rejected", "deferred"]).toContain(result.trust_outcome);
     expect(result.policy_freshness).toBe("transport_violation");
     expect((result.policy_evidence.transport as any).satisfied).toBe(false);
   });
 
-  it("rejects on a stale revocation feed when enforcement is 'fail'", () => {
+  it("rejects on a stale revocation feed when enforcement is 'fail'", async () => {
     const data = loadRequestData();
     const service = new MockTRQPService("data/policies.json", "data/revocations.json");
     service.revocations.issued_at = "2020-01-01T00:00:00Z";
@@ -149,13 +149,13 @@ describe("negative conformance vectors", () => {
       overlays: [],
       source: "inline",
     };
-    const result = verifier.verify(createVerificationRequest(data), profile);
+    const result = await verifier.verify(createVerificationRequest(data), profile);
     expect(result.trust_outcome).toBe("rejected");
     expect(result.policy_freshness).toBe("revocation_stale");
     expect((result.policy_evidence.revocation_status as any).freshness_ok).toBe(false);
   });
 
-  it("defers/continues with a warning on a stale revocation feed when enforcement is 'warn'", () => {
+  it("defers/continues with a warning on a stale revocation feed when enforcement is 'warn'", async () => {
     const data = loadRequestData();
     const service = new MockTRQPService("data/policies.json", "data/revocations.json");
     service.revocations.issued_at = "2020-01-01T00:00:00Z";
@@ -170,7 +170,7 @@ describe("negative conformance vectors", () => {
       overlays: [],
       source: "inline",
     };
-    const result = verifier.verify(createVerificationRequest(data), profile);
+    const result = await verifier.verify(createVerificationRequest(data), profile);
     expect(result.policy_freshness).toBe("stale_but_warned");
     expect((result.policy_evidence.revocation_status as any).freshness_ok).toBe(false);
     expect(result.trust_outcome).toBe("trusted");

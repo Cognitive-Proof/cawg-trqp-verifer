@@ -23,24 +23,24 @@ describe("profile", () => {
     expect(() => loadProfile("definitely-not-a-real-profile")).toThrow(VerificationProfileError);
   });
 
-  it("fail-closed profile rejects service unavailable", () => {
+  it("fail-closed profile rejects service unavailable", async () => {
     const request = loadManifestFixture(
       "examples/fixtures/cawg_manifest_minimal.json",
       "did:web:media-registry.example",
     );
     const verifier = new Verifier({ service: null });
-    const result = verifier.verify(request, loadProfile("high_assurance"));
+    const result = await verifier.verify(request, loadProfile("high_assurance"));
     expect(result.trust_outcome).toBe("rejected");
     expect(result.policy_freshness).toBe("service_unavailable");
   });
 
-  it("fail-open profile defers on service unavailable", () => {
+  it("fail-open profile defers on service unavailable", async () => {
     const request = loadManifestFixture(
       "examples/fixtures/cawg_manifest_minimal.json",
       "did:web:media-registry.example",
     );
     const verifier = new Verifier({ service: null });
-    const result = verifier.verify(request, loadProfile("standard"));
+    const result = await verifier.verify(request, loadProfile("standard"));
     expect(result.trust_outcome).toBe("deferred");
     expect(result.policy_freshness).toBe("service_unavailable");
   });

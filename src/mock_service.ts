@@ -8,6 +8,7 @@ import {
   type AuthorizationResponse,
   type RecognitionResponse,
 } from "./models.js";
+import type { PolicyService } from "./policy_service.js";
 
 function parseUtc(ts: string | null | undefined): Date | null {
   if (!ts) return null;
@@ -30,7 +31,7 @@ export interface MockTRQPServiceOptions {
 
 const EXPECTED_AUTHORITIES = new Set(["did:web:media-registry.example"]);
 
-export class MockTRQPService {
+export class MockTRQPService implements PolicyService {
   readonly policyPath: string;
   readonly policyBodyText: string;
   readonly data: Record<string, unknown>;
@@ -79,17 +80,17 @@ export class MockTRQPService {
     };
   }
 
-  feedDescriptorEvidence(): Record<string, unknown> {
+  async feedDescriptorEvidence(): Promise<Record<string, unknown>> {
     return this.feedValidation as unknown as Record<string, unknown>;
   }
 
-  authorization(
+  async authorization(
     entityId: string,
     authorityId: string,
     action: string,
     resource: string,
     context: Record<string, unknown>,
-  ): AuthorizationResponse {
+  ): Promise<AuthorizationResponse> {
     const revokedEntities = (this.revocations.revoked_entities as string[] | undefined) ?? [];
     if (revokedEntities.includes(entityId)) {
       return createAuthorizationResponse({
@@ -121,11 +122,11 @@ export class MockTRQPService {
     return createAuthorizationResponse({ authorized: false, reason: "no_matching_policy" });
   }
 
-  recognition(
+  async recognition(
     authorityId: string,
     recognizedAuthorityId: string,
     context: Record<string, unknown>,
-  ): RecognitionResponse {
+  ): Promise<RecognitionResponse> {
     const items = (this.data.recognition as Record<string, unknown>[] | undefined) ?? [];
     for (const item of items) {
       if (
@@ -145,7 +146,7 @@ export class MockTRQPService {
     return createRecognitionResponse({ recognized: false, reason: "not_recognized" });
   }
 
-  revocationStatus(): Record<string, unknown> {
+  async revocationStatus(): Promise<Record<string, unknown>> {
     const issuedAt = this.revocations.issued_at as string | undefined;
     return {
       issued_at: issuedAt ?? null,

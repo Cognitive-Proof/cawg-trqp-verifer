@@ -46,7 +46,7 @@ describe("feed descriptor validation", () => {
     expect(report.reason_code).toBe("descriptor_signature_invalid");
   });
 
-  it("exports feed descriptor evidence from a live verification", () => {
+  it("exports feed descriptor evidence from a live verification", async () => {
     const req = loadManifestFixture("examples/fixtures/cawg_manifest_minimal.json", "did:web:media-registry.example");
     const verifier = new Verifier({
       service: new MockTRQPService("data/policies.json", "data/revocations.json", {
@@ -54,7 +54,7 @@ describe("feed descriptor validation", () => {
         revocationDescriptorPath: "examples/feed_descriptors/revocation-feed.signed.json",
       }),
     });
-    const result = verifier.verify(req, "standard");
+    const result = await verifier.verify(req, "standard");
     expect(result.trust_outcome).toBe("trusted");
     expect(result.policy_freshness).toBe("fresh");
     const feedDescriptors = result.policy_evidence.feed_descriptors as Record<string, any>;

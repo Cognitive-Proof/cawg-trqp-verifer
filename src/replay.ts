@@ -40,7 +40,7 @@ export interface ReplayOptions {
   trustedRoot?: string;
 }
 
-export function replayAuditBundle(bundle: Record<string, unknown>, options: ReplayOptions = {}): ReplayReport {
+export async function replayAuditBundle(bundle: Record<string, unknown>, options: ReplayOptions = {}): Promise<ReplayReport> {
   const inputs = (bundle.replay_inputs as Record<string, unknown> | undefined) ?? {};
   const request = createVerificationRequest(inputs.request as VerificationRequest);
   const profileRef = (inputs.profile as ProfileInput | undefined) ?? "standard";
@@ -112,7 +112,7 @@ export function replayAuditBundle(bundle: Record<string, unknown>, options: Repl
     gateway = null;
   }
   const verifier = new Verifier({ service: service ?? undefined, gateway: gateway ?? undefined });
-  const result = verifier.verify(request, resolvedProfile);
+  const result = await verifier.verify(request, resolvedProfile);
   const resultDict = result as unknown as Record<string, unknown>;
   const expected = (bundle.verification_result as Record<string, unknown> | undefined) ?? {};
 

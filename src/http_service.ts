@@ -1,8 +1,8 @@
-import express, { type Express, type Request, type Response } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { auditBundleToDict, buildAuditBundle } from "./audit.js";
 import { TTLCache } from "./cache.js";
 import { TrustGateway } from "./gateway.js";
-import { MockTRQPService } from "./mock_service.js";
+import type { PolicyService } from "./policy_service.js";
 import { createVerificationRequest, type AuthorizationResponse, type RecognitionResponse } from "./models.js";
 import { VerificationProfileError, loadApiProfile, type VerificationProfile } from "./profile.js";
 import { loadPrivacyProfile } from "./privacy.js";
@@ -11,24 +11,41 @@ import { Verifier } from "./verifier.js";
 
 const MAX_REQUEST_BYTES = 64 * 1024;
 
+export interface HTTPTRQPServiceOptions {
+  gatewayId?: string;
+  routeLabel?: string;
+}
+
+/** Wraps any async handler so a rejected promise reaches Express's error middleware
+ * instead of becoming an unhandled rejection (Express 4 doesn't await handlers itself,
+ * so a real, fallible PolicyService backend needs this to fail gracefully). */
+function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res).catch(next);
+  };
+}
+
 /** Express wrapper for TRQP policy service and verifier patterns. */
 export class HTTPTRQPService {
-  readonly mockService: MockTRQPService;
+  readonly service: PolicyService;
   readonly gateway: TrustGateway;
   readonly cache: TTLCache;
   readonly verifier: Verifier;
   readonly gatewayVerifier: Verifier;
   readonly app: Express;
 
-  constructor(policyPath: string, revocationPath: string | null = null) {
-    this.mockService = new MockTRQPService(policyPath, revocationPath);
-    this.gateway = new TrustGateway(this.mockService, { gatewayId: "gateway:http", routeLabel: "http-pattern" });
+  constructor(service: PolicyService, options: HTTPTRQPServiceOptions = {}) {
+    this.service = service;
+    this.gateway = new TrustGateway(this.service, {
+      gatewayId: options.gatewayId ?? "gateway:http",
+      routeLabel: options.routeLabel ?? "http-pattern",
+    });
     // Long-lived L1 cache and verifier instances preserve cache semantics across
     // HTTP requests. Production deployments can replace this adapter with a
     // shared DecisionCache implementation.
     this.cache = new TTLCache(4096);
-    this.verifier = new Verifier({ service: this.mockService, cache: this.cache });
-    this.gatewayVerifier = new Verifier({ service: this.mockService, gateway: this.gateway, cache: this.cache });
+    this.verifier = new Verifier({ service: this.service, cache: this.cache });
+    this.gatewayVerifier = new Verifier({ service: this.service, gateway: this.gateway, cache: this.cache });
     this.app = express();
     this.app.use(express.json({ limit: MAX_REQUEST_BYTES, strict: true }));
     this.registerRoutes();
@@ -58,119 +75,145 @@ export class HTTPTRQPService {
       });
     });
 
-    app.post("/trqp/authorization", (req, res) => {
-      const { data, error } = this.jsonBody(req, res);
-      if (error) return;
-      const required = ["entity_id", "authority_id", "action", "resource"];
-      const missing = required.filter((f) => !(f in data));
-      if (missing.length) {
-        res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
-        return;
-      }
-      if (this.requireStrings(res, data, required)) return;
-      const result = this.mockService.authorization(
-        data.entity_id,
-        data.authority_id,
-        data.action,
-        data.resource,
-        data.context ?? {},
-      );
-      res.status(200).json(this.serializeResponse(result));
-    });
-
-    app.post("/trqp/recognition", (req, res) => {
-      const { data, error } = this.jsonBody(req, res);
-      if (error) return;
-      const required = ["authority_id", "recognized_authority_id"];
-      const missing = required.filter((f) => !(f in data));
-      if (missing.length) {
-        res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
-        return;
-      }
-      if (this.requireStrings(res, data, required)) return;
-      const result = this.mockService.recognition(data.authority_id, data.recognized_authority_id, data.context ?? {});
-      res.status(200).json(this.serializeResponse(result));
-    });
-
-    app.post("/trqp/gateway/authorization", (req, res) => {
-      const { data, error } = this.jsonBody(req, res);
-      if (error) return;
-      const required = ["entity_id", "authority_id", "action", "resource"];
-      const missing = required.filter((f) => !(f in data));
-      if (missing.length) {
-        res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
-        return;
-      }
-      if (this.requireStrings(res, data, required)) return;
-      const [result, mediation] = this.gateway.authorization(
-        data.entity_id,
-        data.authority_id,
-        data.action,
-        data.resource,
-        data.context ?? {},
-      );
-      res.status(200).json({ authorization: result, gateway_mediation: mediation });
-    });
-
-    app.post("/trqp/verify", (req, res) => {
-      const { data, error } = this.jsonBody(req, res);
-      if (error) return;
-      let request;
-      let profile: VerificationProfile;
-      try {
-        request = createVerificationRequest(this.verificationRequestFields(data));
-        profile = this.resolveApiProfile(data);
-      } catch (exc) {
-        res.status(400).json({ error: "invalid_request", message: (exc as Error).message });
-        return;
-      }
-      const verifier = data.use_gateway ? this.gatewayVerifier : this.verifier;
-      const result = verifier.verify(request, profile);
-      this.emitAuditEvent("verify", profile, Boolean(data.use_gateway), result as unknown as Record<string, unknown>);
-      res.status(200).json(result);
-    });
-
-    app.post("/trqp/audit-bundle", (req, res) => {
-      const { data, error } = this.jsonBody(req, res);
-      if (error) return;
-      let request;
-      let profile: VerificationProfile;
-      try {
-        request = createVerificationRequest(this.verificationRequestFields(data));
-        profile = this.resolveApiProfile(data);
-      } catch (exc) {
-        res.status(400).json({ error: "invalid_request", message: (exc as Error).message });
-        return;
-      }
-      const useGateway = Boolean(data.use_gateway);
-      const verifier = useGateway ? this.gatewayVerifier : this.verifier;
-      const result = verifier.verify(request, profile);
-      this.emitAuditEvent("audit_bundle", profile, useGateway, result as unknown as Record<string, unknown>);
-      const privacyName = data.privacy_profile ?? "minimal_receipt";
-      try {
-        const privacyProfile = loadPrivacyProfile(privacyName);
-        const scopes = new Set(
-          (String(req.headers["x-trqp-scopes"] ?? ""))
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean),
+    app.post(
+      "/trqp/authorization",
+      asyncHandler(async (req, res) => {
+        const { data, error } = this.jsonBody(req, res);
+        if (error) return;
+        const required = ["entity_id", "authority_id", "action", "resource"];
+        const missing = required.filter((f) => !(f in data));
+        if (missing.length) {
+          res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
+          return;
+        }
+        if (this.requireStrings(res, data, required)) return;
+        const result = await this.service.authorization(
+          data.entity_id,
+          data.authority_id,
+          data.action,
+          data.resource,
+          data.context ?? {},
         );
-        if (privacyProfile.include_raw_request) {
-          requireScope(scopes, privacyProfile.access_scope);
+        res.status(200).json(this.serializeResponse(result));
+      }),
+    );
+
+    app.post(
+      "/trqp/recognition",
+      asyncHandler(async (req, res) => {
+        const { data, error } = this.jsonBody(req, res);
+        if (error) return;
+        const required = ["authority_id", "recognized_authority_id"];
+        const missing = required.filter((f) => !(f in data));
+        if (missing.length) {
+          res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
+          return;
         }
-        const bundle = buildAuditBundle(request, result, {
-          profile,
-          useGateway,
-          privacyProfile: privacyProfile,
-        });
-        res.status(200).json(auditBundleToDict(bundle));
-      } catch (exc) {
-        if (exc instanceof PermissionError) {
-          res.status(403).json({ error: "forbidden", message: exc.message });
-        } else {
+        if (this.requireStrings(res, data, required)) return;
+        const result = await this.service.recognition(data.authority_id, data.recognized_authority_id, data.context ?? {});
+        res.status(200).json(this.serializeResponse(result));
+      }),
+    );
+
+    app.post(
+      "/trqp/gateway/authorization",
+      asyncHandler(async (req, res) => {
+        const { data, error } = this.jsonBody(req, res);
+        if (error) return;
+        const required = ["entity_id", "authority_id", "action", "resource"];
+        const missing = required.filter((f) => !(f in data));
+        if (missing.length) {
+          res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
+          return;
+        }
+        if (this.requireStrings(res, data, required)) return;
+        const [result, mediation] = await this.gateway.authorization(
+          data.entity_id,
+          data.authority_id,
+          data.action,
+          data.resource,
+          data.context ?? {},
+        );
+        res.status(200).json({ authorization: result, gateway_mediation: mediation });
+      }),
+    );
+
+    app.post(
+      "/trqp/verify",
+      asyncHandler(async (req, res) => {
+        const { data, error } = this.jsonBody(req, res);
+        if (error) return;
+        let request;
+        let profile: VerificationProfile;
+        try {
+          request = createVerificationRequest(this.verificationRequestFields(data));
+          profile = this.resolveApiProfile(data);
+        } catch (exc) {
           res.status(400).json({ error: "invalid_request", message: (exc as Error).message });
+          return;
         }
+        const verifier = data.use_gateway ? this.gatewayVerifier : this.verifier;
+        const result = await verifier.verify(request, profile);
+        this.emitAuditEvent("verify", profile, Boolean(data.use_gateway), result as unknown as Record<string, unknown>);
+        res.status(200).json(result);
+      }),
+    );
+
+    app.post(
+      "/trqp/audit-bundle",
+      asyncHandler(async (req, res) => {
+        const { data, error } = this.jsonBody(req, res);
+        if (error) return;
+        let request;
+        let profile: VerificationProfile;
+        try {
+          request = createVerificationRequest(this.verificationRequestFields(data));
+          profile = this.resolveApiProfile(data);
+        } catch (exc) {
+          res.status(400).json({ error: "invalid_request", message: (exc as Error).message });
+          return;
+        }
+        const useGateway = Boolean(data.use_gateway);
+        const verifier = useGateway ? this.gatewayVerifier : this.verifier;
+        const result = await verifier.verify(request, profile);
+        this.emitAuditEvent("audit_bundle", profile, useGateway, result as unknown as Record<string, unknown>);
+        const privacyName = data.privacy_profile ?? "minimal_receipt";
+        try {
+          const privacyProfile = loadPrivacyProfile(privacyName);
+          const scopes = new Set(
+            (String(req.headers["x-trqp-scopes"] ?? ""))
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          );
+          if (privacyProfile.include_raw_request) {
+            requireScope(scopes, privacyProfile.access_scope);
+          }
+          const bundle = buildAuditBundle(request, result, {
+            profile,
+            useGateway,
+            privacyProfile: privacyProfile,
+          });
+          res.status(200).json(auditBundleToDict(bundle));
+        } catch (exc) {
+          if (exc instanceof PermissionError) {
+            res.status(403).json({ error: "forbidden", message: exc.message });
+          } else {
+            res.status(400).json({ error: "invalid_request", message: (exc as Error).message });
+          }
+        }
+      }),
+    );
+
+    // Catch-all for errors forwarded by asyncHandler (e.g. a real PolicyService
+    // backend failing a network call) that weren't already handled above.
+    app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+      if (res.headersSent) {
+        next(err);
+        return;
       }
+      console.error("cawg_trqp_http_error", err);
+      res.status(502).json({ error: "upstream_unavailable", message: "The policy service could not complete the request" });
     });
   }
 

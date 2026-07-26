@@ -15,10 +15,10 @@ function loadRequest() {
   );
 }
 
-function result() {
+async function result() {
   const request = loadRequest();
   const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-  return { request, result: verifier.verify(request) };
+  return { request, result: await verifier.verify(request) };
 }
 
 function schemaErrors(schemaPath: string, examplePath: string): unknown[] {
@@ -37,8 +37,8 @@ describe("privacy controls", () => {
     }
   });
 
-  it("minimal_receipt redacts raw identifiers", () => {
-    const { request, result: res } = result();
+  it("minimal_receipt redacts raw identifiers", async () => {
+    const { request, result: res } = await result();
     const bundle = auditBundleToDict(buildAuditBundle(request, res, { privacyProfile: "minimal_receipt" }));
     const replayRequest = (bundle.replay_inputs as any).request;
     expect(replayRequest.entity_id).toBeUndefined();
@@ -46,8 +46,8 @@ describe("privacy controls", () => {
     expect((bundle.replay_inputs as any).privacy.contains_raw_request).toBe(false);
   });
 
-  it("replay_bundle retains the request for authorized replay", () => {
-    const { request, result: res } = result();
+  it("replay_bundle retains the request for authorized replay", async () => {
+    const { request, result: res } = await result();
     const bundle = auditBundleToDict(buildAuditBundle(request, res, { privacyProfile: "replay_bundle" }));
     expect((bundle.replay_inputs as any).request.entity_id).toBe(request.entity_id);
     expect((bundle.replay_inputs as any).privacy.access_scope).toBe("trqp.audit.export");
@@ -69,7 +69,7 @@ describe("privacy controls", () => {
   });
 
   it("requires the export scope for full replay bundles over HTTP", async () => {
-    const service = new HTTPTRQPService("data/policies.json", "data/revocations.json");
+    const service = new HTTPTRQPService(new MockTRQPService("data/policies.json", "data/revocations.json"));
     const server = service.app.listen(0);
     const port = (server.address() as { port: number }).port;
     try {

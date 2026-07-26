@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { HTTPTRQPService } from "../src/http_service.js";
+import { MockTRQPService } from "../src/mock_service.js";
 
 async function withServer<T>(service: HTTPTRQPService, fn: (baseUrl: string) => Promise<T>): Promise<T> {
   const server = service.app.listen(0);
@@ -14,7 +15,7 @@ async function withServer<T>(service: HTTPTRQPService, fn: (baseUrl: string) => 
 
 describe("HTTP cache lifecycle", () => {
   it("reuses the cache across requests", async () => {
-    const service = new HTTPTRQPService("data/policies.json", "data/revocations.json");
+    const service = new HTTPTRQPService(new MockTRQPService("data/policies.json", "data/revocations.json"));
     const payload = readFileSync("examples/verification_request.json", "utf-8");
     await withServer(service, async (baseUrl) => {
       const first = await fetch(`${baseUrl}/trqp/verify`, {
@@ -36,7 +37,7 @@ describe("HTTP cache lifecycle", () => {
   });
 
   it("shares the L1 cache between the direct and gateway verifiers", () => {
-    const service = new HTTPTRQPService("data/policies.json", "data/revocations.json");
+    const service = new HTTPTRQPService(new MockTRQPService("data/policies.json", "data/revocations.json"));
     expect(service.verifier.cache).toBe(service.cache);
     expect(service.gatewayVerifier.cache).toBe(service.cache);
   });

@@ -6,7 +6,7 @@ import { MockTRQPService } from "../src/mock_service.js";
 import { Verifier } from "../src/verifier.js";
 
 describe("gateway routes", () => {
-  it("routes multi-authority requests deterministically", () => {
+  it("routes multi-authority requests deterministically", async () => {
     const routes = {
       "did:web:media-registry.example": {
         service: new MockTRQPService("data/policies_multi_authority.json"),
@@ -24,7 +24,7 @@ describe("gateway routes", () => {
     const vector = { ...vectors[1] };
     delete vector.name;
     const request = createVerificationRequest(vector as VerificationRequest);
-    const result = verifier.verify(request, "standard");
+    const result = await verifier.verify(request, "standard");
 
     expect(result.trust_outcome).toBe("trusted");
     expect((result.gateway_mediation as any).route_label).toBe("route:coalition-eu");

@@ -65,7 +65,7 @@ for (const [label, report] of [
   }
 }
 
-const replayReport = replayAuditBundle(loadJson(path.join(EXAMPLE, "replay_bundle.json")));
+const replayReport = await replayAuditBundle(loadJson(path.join(EXAMPLE, "replay_bundle.json")));
 if (!replayReport.matches) {
   failures.push("replay bundle did not reproduce the expected verification result");
   failures.push(...replayReport.differences);

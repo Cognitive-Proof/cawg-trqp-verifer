@@ -20,7 +20,7 @@ describe("HTTP security hardening", () => {
   let baseUrl: string;
 
   beforeEach(() => {
-    service = new HTTPTRQPService("data/policies.json", "data/revocations.json");
+    service = new HTTPTRQPService(new MockTRQPService("data/policies.json", "data/revocations.json"));
     server = service.app.listen(0);
     const port = (server.address() as { port: number }).port;
     baseUrl = `http://127.0.0.1:${port}`;
@@ -53,22 +53,22 @@ describe("HTTP security hardening", () => {
 });
 
 describe("high assurance transport guardrails", () => {
-  it("fails closed without feed descriptors", () => {
+  it("fails closed without feed descriptors", async () => {
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verifier.verify(request(), "high_assurance");
+    const result = await verifier.verify(request(), "high_assurance");
     expect(result.verification_mode).toBe("transport_guardrail");
     expect(result.trust_outcome).toBe("rejected");
     expect(result.explanations[0]).toContain("missing_feed_descriptor");
   });
 
-  it("accepts valid feed descriptors", () => {
+  it("accepts valid feed descriptors", async () => {
     const verifier = new Verifier({
       service: new MockTRQPService("data/policies.json", "data/revocations.json", {
         policyDescriptorPath: "examples/feed_descriptors/policy-feed.signed.json",
         revocationDescriptorPath: "examples/feed_descriptors/revocation-feed.signed.json",
       }),
     });
-    const result = verifier.verify(request(), "high_assurance");
+    const result = await verifier.verify(request(), "high_assurance");
     expect(result.trust_outcome).toBe("trusted");
     expect((result.policy_evidence.feed_descriptors as any).policy.reason_code).toBe("fresh");
     expect((result.policy_evidence.feed_descriptors as any).revocation.reason_code).toBe("fresh");
@@ -89,9 +89,9 @@ describe("feed descriptor hardening", () => {
 });
 
 describe("replay path hardening", () => {
-  it("rejects a bundle policy path outside the trusted root", () => {
+  it("rejects a bundle policy path outside the trusted root", async () => {
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verifier.verify(request(), "standard");
+    const result = await verifier.verify(request(), "standard");
     const bundle = auditBundleToDict(
       buildAuditBundle(request(), result, {
         profile: "standard",
@@ -100,12 +100,12 @@ describe("replay path hardening", () => {
       }),
     );
     (bundle.replay_inputs as any).policy_feed.policy_source = "/tmp/outside-policy.json";
-    expect(() => replayAuditBundle(bundle)).toThrow(/trusted replay root/);
+    await expect(replayAuditBundle(bundle)).rejects.toThrow(/trusted replay root/);
   });
 
-  it("rejects a bundle with a policy digest mismatch", () => {
+  it("rejects a bundle with a policy digest mismatch", async () => {
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verifier.verify(request(), "standard");
+    const result = await verifier.verify(request(), "standard");
     const bundle = auditBundleToDict(
       buildAuditBundle(request(), result, {
         profile: "standard",
@@ -114,6 +114,6 @@ describe("replay path hardening", () => {
       }),
     );
     (bundle.replay_inputs as any).policy_feed.policy_source_sha256 = "0".repeat(64);
-    expect(() => replayAuditBundle(bundle)).toThrow(/digest mismatch/);
+    await expect(replayAuditBundle(bundle)).rejects.toThrow(/digest mismatch/);
   });
 });

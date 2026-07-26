@@ -11,10 +11,10 @@ const standard = new Verifier({ service: new MockTRQPService("data/policies.json
 const edge = new Verifier({ snapshot: new SnapshotStore("data/snapshot.json", null) });
 
 console.log("=== Standard Profile: Allowed Entity ===");
-console.log(JSON.stringify(standard.verify(standardRequest, "standard"), null, 2));
+console.log(JSON.stringify(await standard.verify(standardRequest, "standard"), null, 2));
 
 console.log("\n=== Edge Profile: Allowed Entity ===");
-console.log(JSON.stringify(edge.verify(standardRequest, "edge"), null, 2));
+console.log(JSON.stringify(await edge.verify(standardRequest, "edge"), null, 2));
 
 console.log("\n=== Standard Profile: Blocked Entity ===");
-console.log(JSON.stringify(standard.verify(blockedRequest, "standard"), null, 2));
+console.log(JSON.stringify(await standard.verify(blockedRequest, "standard"), null, 2));

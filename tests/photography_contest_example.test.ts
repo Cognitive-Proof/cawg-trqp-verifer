@@ -6,9 +6,9 @@ import { replayAuditBundle } from "../src/replay.js";
 const EXAMPLE = "examples/photography_contest";
 
 describe("photography contest example", () => {
-  it("replays with signed feed descriptors", () => {
+  it("replays with signed feed descriptors", async () => {
     const bundle = JSON.parse(readFileSync(`${EXAMPLE}/replay_bundle.json`, "utf-8"));
-    const report = replayAuditBundle(bundle);
+    const report = await replayAuditBundle(bundle);
     expect(report.matches).toBe(true);
     expect(report.replayed_result.trust_outcome).toBe("trusted");
     expect((report.replayed_result.policy_evidence as any).feed_descriptors.policy.reason_code).toBe("fresh");

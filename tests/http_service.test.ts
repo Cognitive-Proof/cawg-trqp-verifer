@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { HTTPTRQPService } from "../src/http_service.js";
+import { MockTRQPService } from "../src/mock_service.js";
 
 describe("HTTP TRQP service endpoints", () => {
   let service: HTTPTRQPService;
@@ -8,7 +9,7 @@ describe("HTTP TRQP service endpoints", () => {
   let baseUrl: string;
 
   beforeEach(() => {
-    service = new HTTPTRQPService("data/policies.json", "data/revocations.json");
+    service = new HTTPTRQPService(new MockTRQPService("data/policies.json", "data/revocations.json"));
     server = service.app.listen(0);
     const port = (server.address() as { port: number }).port;
     baseUrl = `http://127.0.0.1:${port}`;

@@ -5,7 +5,7 @@ import {
   type VerificationRequest,
   type VerificationResult,
 } from "./models.js";
-import { MockTRQPService } from "./mock_service.js";
+import type { PolicyService } from "./policy_service.js";
 import { SnapshotStore } from "./snapshot.js";
 import { TrustGateway } from "./gateway.js";
 import { loadProfile, verificationProfileToDict, type ProfileInput, type VerificationProfile } from "./profile.js";
@@ -37,14 +37,14 @@ export class RevocationDelta {
 }
 
 export interface VerifierOptions {
-  service?: MockTRQPService | null;
+  service?: PolicyService | null;
   snapshot?: SnapshotStore | null;
   cache?: TTLCache | null;
   gateway?: TrustGateway | null;
 }
 
 export class Verifier {
-  service: MockTRQPService | null;
+  service: PolicyService | null;
   snapshot: SnapshotStore | null;
   cache: TTLCache;
   gateway: TrustGateway | null;
@@ -64,7 +64,7 @@ export class Verifier {
     this.revocationDelta = new RevocationDelta(revokedEntities, policyEpoch);
   }
 
-  verify(request: VerificationRequest, profile: ProfileInput = "standard"): VerificationResult {
+  async verify(request: VerificationRequest, profile: ProfileInput = "standard"): Promise<VerificationResult> {
     const resolvedProfile = loadProfile(profile);
     if (!request.integrity_ok) {
       return createVerificationResult({
@@ -133,7 +133,7 @@ export class Verifier {
     return createFeedTransportMetadata({ mode: "local", integrity: "none", available: false, channel: "none" });
   }
 
-  private currentFeedDescriptorEvidence(): Record<string, unknown> {
+  private async currentFeedDescriptorEvidence(): Promise<Record<string, unknown>> {
     if (this.gateway !== null && this.gateway.service !== null) {
       return this.gateway.service.feedDescriptorEvidence();
     }
@@ -143,13 +143,13 @@ export class Verifier {
     return {};
   }
 
-  private currentRevocationStatus(profile: VerificationProfile): Record<string, unknown> {
+  private async currentRevocationStatus(profile: VerificationProfile): Promise<Record<string, unknown>> {
     const maxAge = (profile.controls.revocation.max_age_seconds as number | undefined) ?? 0;
     const enforcement = (profile.controls.revocation.enforcement as string | undefined) ?? "warn";
     const failures: string[] = [];
     let status: Record<string, unknown>;
     if (this.service !== null) {
-      status = { source: "service", ...this.service.revocationStatus() };
+      status = { source: "service", ...(await this.service.revocationStatus()) };
     } else {
       status = { source: "none", channel: "none", age_seconds: null };
     }
@@ -181,11 +181,11 @@ export class Verifier {
     return [failures.length === 0, failures];
   }
 
-  private evaluateRevocationFreshness(profile: VerificationProfile): [boolean, string[]] {
-    const status = this.currentRevocationStatus(profile);
+  private async evaluateRevocationFreshness(profile: VerificationProfile): Promise<[boolean, string[]]> {
+    const status = await this.currentRevocationStatus(profile);
     this.lastRevocationStatus = status;
     const failures = [...((status.violations as string[] | undefined) ?? [])];
-    this.lastFeedDescriptorEvidence = this.currentFeedDescriptorEvidence();
+    this.lastFeedDescriptorEvidence = await this.currentFeedDescriptorEvidence();
     const descriptorPolicy = (profile.controls.descriptor_policy as Record<string, string> | undefined) ?? {};
     const descriptorFailureReasons = new Set([
       "descriptor_malformed",
@@ -250,6 +250,39 @@ export class Verifier {
       actor_authorization: "unknown",
       process_integrity: "unknown",
       policy_freshness: "service_unavailable",
+      verification_mode: profile.controls.freshness.require_live ? "online_full" : "cached_online",
+      trust_outcome: trustOutcome,
+      policy_evidence: {
+        verification_profile: verificationProfileToDict(profile),
+        transport: this.lastTransportMetadata,
+        revocation_status: this.lastRevocationStatus,
+        feed_descriptors: this.lastFeedDescriptorEvidence,
+      },
+      explanations: [explanation],
+    });
+  }
+
+  /**
+   * MockTRQPService's in-memory lookups never fail, but a real PolicyService
+   * backend (network calls) can reject at any point during the online lookup.
+   * Route that the same way an unconfigured service is routed - through the
+   * profile's fail_open/fail_closed control - rather than letting the error
+   * propagate uncaught out of verify().
+   */
+  private serviceErrorResult(profile: VerificationProfile, error: unknown): VerificationResult {
+    const failClosed = profile.controls.failure.network_failure === "fail_closed";
+    const trustOutcome = failClosed ? "rejected" : "deferred";
+    const message = error instanceof Error ? error.message : String(error);
+    const explanation = failClosed
+      ? `Live policy service call failed: ${message}; profile requires fail-closed handling`
+      : `Live policy service call failed: ${message}`;
+    return createVerificationResult({
+      asset_integrity: "verified",
+      assertion_binding: "verified",
+      issuer_recognition: "unknown",
+      actor_authorization: "unknown",
+      process_integrity: "unknown",
+      policy_freshness: "service_error",
       verification_mode: profile.controls.freshness.require_live ? "online_full" : "cached_online",
       trust_outcome: trustOutcome,
       policy_evidence: {
@@ -348,14 +381,14 @@ export class Verifier {
     });
   }
 
-  private verifyOnline(
+  private async verifyOnline(
     request: VerificationRequest,
     authKey: string,
     recKey: string,
     recContext: Record<string, unknown>,
     forceLive: boolean,
     profile: VerificationProfile,
-  ): VerificationResult {
+  ): Promise<VerificationResult> {
     if (this.service === null && this.gateway === null) {
       this.lastTransportMetadata = {
         required: { ...profile.controls.transport },
@@ -369,8 +402,29 @@ export class Verifier {
       return this.serviceUnavailableResult(profile);
     }
 
+    try {
+      return await this.verifyOnlineUnsafe(request, authKey, recKey, recContext, forceLive, profile);
+    } catch (error) {
+      return this.serviceErrorResult(profile, error);
+    }
+  }
+
+  /**
+   * The part of verifyOnline that actually calls out to the configured
+   * service/gateway. Split out so verifyOnline can wrap it in a single
+   * try/catch - a real PolicyService backend can reject at any of several
+   * points below (transport/revocation checks, authorization, recognition).
+   */
+  private async verifyOnlineUnsafe(
+    request: VerificationRequest,
+    authKey: string,
+    recKey: string,
+    recContext: Record<string, unknown>,
+    forceLive: boolean,
+    profile: VerificationProfile,
+  ): Promise<VerificationResult> {
     const [transportOk, transportFailures] = this.evaluateTransport(profile);
-    const [revocationOk, revocationFailures] = this.evaluateRevocationFreshness(profile);
+    const [revocationOk, revocationFailures] = await this.evaluateRevocationFreshness(profile);
     if (!transportOk) {
       return this.transportOrRevocationFailureResult(profile, "transport_violation", transportFailures.join("; "));
     }
@@ -391,7 +445,7 @@ export class Verifier {
         return this.serviceUnavailableResult(profile);
       }
       if (this.gateway !== null) {
-        const [authResult, mediation] = this.gateway.authorization(
+        const [authResult, mediation] = await this.gateway.authorization(
           request.entity_id,
           request.authority_id,
           request.action,
@@ -402,13 +456,13 @@ export class Verifier {
         gatewayMediation = mediation;
         explanations.push("Trust gateway mediated authorization lookup");
       } else {
-        auth = this.service!.authorization(
+        auth = (await this.service!.authorization(
           request.entity_id,
           request.authority_id,
           request.action,
           request.resource,
           request.context,
-        ) as unknown as Record<string, unknown>;
+        )) as unknown as Record<string, unknown>;
         explanations.push("Live authorization lookup executed");
       }
       this.cache.set(authKey, auth, "medium");
@@ -419,13 +473,13 @@ export class Verifier {
     if (request.issuer_id) {
       if (rec === null) {
         if (this.gateway !== null) {
-          const [recResult, recMediation] = this.gateway.recognition(request.authority_id, request.issuer_id, recContext);
+          const [recResult, recMediation] = await this.gateway.recognition(request.authority_id, request.issuer_id, recContext);
           rec = recResult;
           gatewayMediation = { ...gatewayMediation, recognition: recMediation };
           this.cache.set(recKey, rec, "medium");
           explanations.push("Trust gateway mediated recognition lookup");
         } else if (this.service !== null) {
-          rec = this.service.recognition(request.authority_id, request.issuer_id, recContext) as unknown as Record<
+          rec = (await this.service.recognition(request.authority_id, request.issuer_id, recContext)) as unknown as Record<
             string,
             unknown
           >;

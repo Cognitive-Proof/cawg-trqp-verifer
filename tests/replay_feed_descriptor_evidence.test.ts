@@ -6,7 +6,7 @@ import { MockTRQPService } from "../src/mock_service.js";
 import { Verifier } from "../src/verifier.js";
 
 describe("audit bundle feed descriptor evidence", () => {
-  it("carries feed descriptor evidence into replay inputs", () => {
+  it("carries feed descriptor evidence into replay inputs", async () => {
     const request = createVerificationRequest(
       JSON.parse(readFileSync("examples/verification_request.json", "utf-8")) as VerificationRequest,
     );
@@ -16,7 +16,7 @@ describe("audit bundle feed descriptor evidence", () => {
         revocationDescriptorPath: "examples/feed_descriptors/revocation-feed.signed.json",
       }),
     });
-    const result = verifier.verify(request);
+    const result = await verifier.verify(request);
     const bundle = auditBundleToDict(
       buildAuditBundle(request, result, { policyPath: "data/policies.json", revocationPath: "data/revocations.json" }),
     );

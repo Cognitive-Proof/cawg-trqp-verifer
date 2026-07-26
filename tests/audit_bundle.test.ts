@@ -14,10 +14,10 @@ function loadRequest(path = "examples/verification_request.json") {
 }
 
 describe("audit bundle", () => {
-  it("contains policy and process data", () => {
+  it("contains policy and process data", async () => {
     const request = loadRequest();
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verifier.verify(request);
+    const result = await verifier.verify(request);
     const bundle = auditBundleToDict(
       buildAuditBundle(request, result, {
         profile: "standard",
@@ -34,20 +34,20 @@ describe("audit bundle", () => {
     expect((bundle.bundle_digest_sha256 as string).length).toBe(64);
   });
 
-  it("exports gateway mediation in the bundle", () => {
+  it("exports gateway mediation in the bundle", async () => {
     const request = loadRequest();
     const service = new MockTRQPService("data/policies.json");
     const verifier = new Verifier({ service, gateway: new TrustGateway(service, { gatewayId: "gateway:test" }) });
-    const result = verifier.verify(request);
+    const result = await verifier.verify(request);
     const bundle = auditBundleToDict(buildAuditBundle(request, result, { profile: "standard", useGateway: true }));
     expect((bundle.gateway_mediation as any).gateway_id).toBe("gateway:test");
     expect((bundle.replay_inputs as any).use_gateway).toBe(true);
   });
 
-  it("passes schema and digest validation", () => {
+  it("passes schema and digest validation", async () => {
     const request = loadRequest();
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verifier.verify(request);
+    const result = await verifier.verify(request);
     const bundle = auditBundleToDict(
       buildAuditBundle(request, result, {
         exportedAt: "2026-03-31T00:00:00Z",
@@ -59,10 +59,10 @@ describe("audit bundle", () => {
     expect(validateAuditBundle(bundle, schema)).toEqual([]);
   });
 
-  it("passes attestation validation once signed", () => {
+  it("passes attestation validation once signed", async () => {
     const request = loadRequest();
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verifier.verify(request);
+    const result = await verifier.verify(request);
     const bundle = auditBundleToDict(
       buildAuditBundle(request, result, {
         exportedAt: "2026-03-31T00:00:00Z",
@@ -77,10 +77,10 @@ describe("audit bundle", () => {
     expect(validateAuditBundle(signedBundle, schema, { trustAnchorsPath: "data/trust_anchors.json" })).toEqual([]);
   });
 
-  it("replays to match the original verification", () => {
+  it("replays to match the original verification", async () => {
     const request = loadRequest();
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verifier.verify(request);
+    const result = await verifier.verify(request);
     const bundle = auditBundleToDict(
       buildAuditBundle(request, result, {
         exportedAt: "2026-03-31T00:00:00Z",
@@ -88,7 +88,7 @@ describe("audit bundle", () => {
         revocationPath: "data/revocations.json",
       }),
     );
-    const report = replayAuditBundle(bundle);
+    const report = await replayAuditBundle(bundle);
     expect(report.matches).toBe(true);
     expect(report.differences).toEqual([]);
     expect(report.policy_sources.policy_source).toBe("data/policies.json");

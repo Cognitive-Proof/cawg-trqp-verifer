@@ -1,9 +1,9 @@
-import type { MockTRQPService } from "./mock_service.js";
+import type { PolicyService } from "./policy_service.js";
 import { createFeedTransportMetadata, type FeedTransportMetadata } from "./transport.js";
 import type { AuthorizationResponse, RecognitionResponse } from "./models.js";
 
 export interface AuthorityRoute {
-  service: MockTRQPService;
+  service: PolicyService;
   route_label?: string;
 }
 
@@ -20,13 +20,13 @@ export interface GatewayOptions {
  * evidence so mediated authorization can be replayed and audited.
  */
 export class TrustGateway {
-  readonly service: MockTRQPService | null;
+  readonly service: PolicyService | null;
   readonly gatewayId: string;
   readonly routeLabel: string;
   readonly authorityRoutes: Record<string, AuthorityRoute>;
   readonly transportMetadata: FeedTransportMetadata;
 
-  constructor(service: MockTRQPService | null = null, options: GatewayOptions = {}) {
+  constructor(service: PolicyService | null = null, options: GatewayOptions = {}) {
     this.service = service;
     this.gatewayId = options.gatewayId ?? "gateway:default";
     this.routeLabel = options.routeLabel ?? "default";
@@ -39,7 +39,7 @@ export class TrustGateway {
     });
   }
 
-  private resolveRoute(authorityId: string): [MockTRQPService, string] {
+  private resolveRoute(authorityId: string): [PolicyService, string] {
     const route = this.authorityRoutes[authorityId];
     if (route !== undefined) {
       return [route.service, route.route_label ?? authorityId];
@@ -50,13 +50,14 @@ export class TrustGateway {
     return [this.service, this.routeLabel];
   }
 
-  private mediation(
-    service: MockTRQPService,
+  private async mediation(
+    service: PolicyService,
     routeLabel: string,
     authorityId: string,
     decisionType: string,
-  ): Record<string, unknown> {
-    const feed = (service.feedDescriptorEvidence().policy as Record<string, unknown> | undefined) ?? {};
+  ): Promise<Record<string, unknown>> {
+    const feedEvidence = await service.feedDescriptorEvidence();
+    const feed = (feedEvidence.policy as Record<string, unknown> | undefined) ?? {};
     return {
       gateway_id: this.gatewayId,
       route_label: routeLabel,
@@ -68,26 +69,26 @@ export class TrustGateway {
     };
   }
 
-  authorization(
+  async authorization(
     entityId: string,
     authorityId: string,
     action: string,
     resource: string,
     context: Record<string, unknown>,
-  ): [Record<string, unknown>, Record<string, unknown>] {
+  ): Promise<[Record<string, unknown>, Record<string, unknown>]> {
     const [service, routeLabel] = this.resolveRoute(authorityId);
-    const response = service.authorization(entityId, authorityId, action, resource, context);
-    return [asDict(response), this.mediation(service, routeLabel, authorityId, "authorization")];
+    const response = await service.authorization(entityId, authorityId, action, resource, context);
+    return [asDict(response), await this.mediation(service, routeLabel, authorityId, "authorization")];
   }
 
-  recognition(
+  async recognition(
     authorityId: string,
     recognizedAuthorityId: string,
     context: Record<string, unknown>,
-  ): [Record<string, unknown>, Record<string, unknown>] {
+  ): Promise<[Record<string, unknown>, Record<string, unknown>]> {
     const [service, routeLabel] = this.resolveRoute(authorityId);
-    const response = service.recognition(authorityId, recognizedAuthorityId, context);
-    return [asDict(response), this.mediation(service, routeLabel, authorityId, "recognition")];
+    const response = await service.recognition(authorityId, recognizedAuthorityId, context);
+    return [asDict(response), await this.mediation(service, routeLabel, authorityId, "recognition")];
   }
 }
 

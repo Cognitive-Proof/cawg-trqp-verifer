@@ -58,13 +58,13 @@ const cases: [string, () => Verifier, string][] = [
 ];
 
 describe("fixture packages replay to expected outcomes", () => {
-  it.each(cases)("%s", (fixtureName, verifierFactory, profile) => {
+  it.each(cases)("%s", async (fixtureName, verifierFactory, profile) => {
     const base = path.join(FIXTURE_ROOT, fixtureName);
     const request = createVerificationRequest(
       JSON.parse(readFileSync(path.join(base, "request.json"), "utf-8")) as VerificationRequest,
     );
     const expected = JSON.parse(readFileSync(path.join(base, "expected_result.json"), "utf-8"));
-    const result = verificationResultToDict(verifierFactory().verify(request, profile));
+    const result = verificationResultToDict(await verifierFactory().verify(request, profile));
 
     expect(result.trust_outcome).toBe(expected.trust_outcome);
     expect(result.verification_mode).toBe(expected.verification_mode);

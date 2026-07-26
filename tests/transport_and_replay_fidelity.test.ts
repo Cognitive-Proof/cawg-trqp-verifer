@@ -16,7 +16,7 @@ function request(): VerificationRequest {
 }
 
 describe("transport and replay fidelity", () => {
-  it("rejects insufficient transport integrity for a strict overlay", () => {
+  it("rejects insufficient transport integrity for a strict overlay", async () => {
     const profile = loadProfile({
       id: "strict_transport_test",
       base_profile: "standard",
@@ -29,13 +29,13 @@ describe("transport and replay fidelity", () => {
     const verifier = new Verifier({
       service: new MockTRQPService("data/policies.json", "data/revocations.json", { transportIntegrity: "tls" }),
     });
-    const result = verifier.verify(request(), profile);
+    const result = await verifier.verify(request(), profile);
     expect(result.verification_mode).toBe("transport_guardrail");
     expect(result.policy_freshness).toBe("transport_violation");
     expect((result.policy_evidence.transport as any).satisfied).toBe(false);
   });
 
-  it("keeps verification running on the revocation freshness warn path", () => {
+  it("keeps verification running on the revocation freshness warn path", async () => {
     const profile = loadProfile({
       id: "warn_revocation_test",
       base_profile: "standard",
@@ -60,7 +60,7 @@ describe("transport and replay fidelity", () => {
     );
     try {
       const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", stalePath) });
-      const result = verifier.verify(request(), profile);
+      const result = await verifier.verify(request(), profile);
       expect(result.trust_outcome).toBe("trusted");
       expect(result.policy_freshness).toBe("stale_but_warned");
       expect((result.policy_evidence.revocation_status as any).freshness_ok).toBe(false);
@@ -69,9 +69,9 @@ describe("transport and replay fidelity", () => {
     }
   });
 
-  it("carries the transport and revocation contract through replay", () => {
+  it("carries the transport and revocation contract through replay", async () => {
     const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
-    const result = verifier.verify(request(), "standard");
+    const result = await verifier.verify(request(), "standard");
     const bundle = auditBundleToDict(
       buildAuditBundle(request(), result, {
         profile: "standard",
@@ -84,7 +84,7 @@ describe("transport and replay fidelity", () => {
     expect("revocation_status" in (bundle.replay_inputs as any)).toBe(true);
     expect((bundle.replay_inputs as any).replay_contract.revocation_freshness_evaluated).toBe(true);
 
-    const report = replayAuditBundle(bundle);
+    const report = await replayAuditBundle(bundle);
     expect(report.matches).toBe(true);
   });
 

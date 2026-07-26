@@ -15,7 +15,7 @@ const [bundleJson] = program.args;
 const opts = program.opts();
 
 const bundle = loadJson(bundleJson);
-const report = replayAuditBundle(bundle, {
+const report = await replayAuditBundle(bundle, {
   policyPath: opts.policies ?? null,
   revocationPath: opts.revocations ?? null,
   trustedRoot: opts.trustedRoot,

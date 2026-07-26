@@ -23,7 +23,7 @@ const opts = program.opts();
 const request = createVerificationRequest(loadJson(opts.request) as unknown as VerificationRequest);
 const profile = loadProfile("standard");
 const verifier = new Verifier({ service: new MockTRQPService(opts.policies, opts.revocations) });
-const result = verifier.verify(request, profile);
+const result = await verifier.verify(request, profile);
 const actual = auditBundleToDict(
   buildAuditBundle(request, result, {
     profile,

@@ -11,7 +11,7 @@ import { SnapshotStore } from "./snapshot.js";
 import { TrustGateway } from "./gateway.js";
 import { Verifier } from "./verifier.js";
 
-export function main(argv: string[] = process.argv): void {
+export async function main(argv: string[] = process.argv): Promise<void> {
   const program = new Command();
   program
     .description("CAWG-TRQP reference verifier")
@@ -73,7 +73,7 @@ export function main(argv: string[] = process.argv): void {
     snapshot = new SnapshotStore(path.join(root, opts.snapshot), path.join(root, opts.trustAnchors));
   }
   const verifier = new Verifier({ service, snapshot, gateway });
-  const result = verifier.verify(request, resolvedProfile);
+  const result = await verifier.verify(request, resolvedProfile);
   console.log(JSON.stringify(result, null, 2));
 
   if (opts.exportAuditBundle) {
@@ -109,14 +109,12 @@ export class CliError extends Error {
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
 if (isMain) {
-  try {
-    main();
-  } catch (err) {
+  main().catch((err) => {
     if (err instanceof CliError) {
       console.error(err.message);
       process.exitCode = 1;
     } else {
       throw err;
     }
-  }
+  });
 }

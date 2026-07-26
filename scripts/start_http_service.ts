@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { Command } from "commander";
 import { HTTPTRQPService } from "../src/http_service.js";
+import { MockTRQPService } from "../src/mock_service.js";
 
 const program = new Command();
 program
@@ -40,5 +41,6 @@ console.log("  POST /trqp/recognition");
 console.log("  GET /health");
 console.log();
 
-const service = new HTTPTRQPService(opts.policyPath, revocationPath);
+const policyService = new MockTRQPService(opts.policyPath, revocationPath);
+const service = new HTTPTRQPService(policyService);
 service.run(opts.host, Number(opts.port));
