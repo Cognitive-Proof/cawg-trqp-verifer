@@ -18,6 +18,14 @@ A reference verifier for evaluating CAWG/C2PA manifest trust signals against TRQ
 
 ## Install
 
+As a dependency in your own project:
+
+```bash
+npm install @cognitiveproof/cawg-trqp
+```
+
+To work on this repo itself (an npm workspaces monorepo — `npm install` at the root also installs every package under `plugins/*`):
+
 ```bash
 npm install
 ```
@@ -83,12 +91,35 @@ conformance/    assurance-suite manifest and compatibility matrix
 ## Library usage
 
 ```ts
-import { Verifier, MockTRQPService, loadManifestFixture } from "cawg-trqp-refimpl";
+import { Verifier, MockTRQPService, loadManifestFixture } from "@cognitiveproof/cawg-trqp";
 
 const request = loadManifestFixture("examples/fixtures/cawg_manifest_minimal.json", "did:web:media-registry.example");
 const verifier = new Verifier({ service: new MockTRQPService("data/policies.json", "data/revocations.json") });
 const result = verifier.verify(request, "standard");
 ```
+
+## Plugins
+
+`MockTRQPService`, `TTLCache`, and `InMemoryRevocationDeltaStore` are in-memory reference adapters, each behind a small async interface (`PolicyService`, `DecisionCache<T>`, `RevocationDeltaStore`) so a real deployment can swap in a network/database-backed implementation without changing `Verifier` or `HTTPTRQPService`. This repo publishes those as separate optional packages under `plugins/*`:
+
+| Package | Provides | Backend |
+|---|---|---|
+| [`@cognitiveproof/cawg-trqp-plugin-mongodb`](plugins/mongodb) | `PolicyService` | [`mongodb`](https://www.npmjs.com/package/mongodb) |
+| [`@cognitiveproof/cawg-trqp-plugin-mysql`](plugins/mysql) | `PolicyService` | [`mysql2`](https://www.npmjs.com/package/mysql2) |
+| [`@cognitiveproof/cawg-trqp-plugin-postgres`](plugins/postgres) | `PolicyService` | [`pg`](https://www.npmjs.com/package/pg) |
+| [`@cognitiveproof/cawg-trqp-plugin-redis`](plugins/redis) | `DecisionCache`, `RevocationDeltaStore` | [`ioredis`](https://github.com/redis/ioredis) — needed once you run more than one verifier instance, since the in-memory defaults don't share state across processes |
+
+Each is an optional peer dependency of the core package — install only the ones your deployment needs. See each plugin's own README for schema and usage.
+
+## Releasing
+
+Versioning and npm publishing for this package and every `plugins/*` package are automated with [Changesets](https://github.com/changesets/changesets):
+
+1. On a feature branch, describe your change: `npm run changeset` — pick which package(s) changed and whether it's a patch/minor/major bump, then write a summary. Commit the generated `.changeset/*.md` file with your PR.
+2. Once merged to `main`, CI opens (or updates) a "Version Packages" PR that applies the version bumps and changelog entries for every pending changeset.
+3. Merging that PR triggers the same workflow to build, test, and `npm publish` every package that changed, using npm's OIDC Trusted Publishing (no long-lived npm token stored in this repo).
+
+See `.github/workflows/npm-publish.yaml` and `.github/workflows/ci.yaml`.
 
 ## Fidelity notes
 
