@@ -123,15 +123,19 @@ export class MockTRQPService implements PolicyService {
   }
 
   async recognition(
+    entityId: string,
     authorityId: string,
-    recognizedAuthorityId: string,
+    action: string,
+    resource: string,
     context: Record<string, unknown>,
   ): Promise<RecognitionResponse> {
     const items = (this.data.recognition as Record<string, unknown>[] | undefined) ?? [];
     for (const item of items) {
       if (
+        item.entity_id === entityId &&
         item.authority_id === authorityId &&
-        item.recognized_authority_id === recognizedAuthorityId &&
+        item.action === action &&
+        item.resource === resource &&
         contextMatches(context, (item.context as Record<string, unknown> | undefined) ?? {})
       ) {
         return createRecognitionResponse({

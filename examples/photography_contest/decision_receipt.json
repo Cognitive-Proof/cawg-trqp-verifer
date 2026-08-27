@@ -211,8 +211,8 @@
             "freshness_ok": true,
             "reason_code": "fresh",
             "violations": [],
-            "digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
-            "declared_digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
+            "digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
+            "declared_digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
             "issued_at": "2026-04-27T00:00:00Z",
             "valid_until": "2027-04-27T00:00:00Z",
             "max_age_seconds": 86400

@@ -75,11 +75,13 @@ describe("MySQLPolicyService", () => {
     expect(result).toMatchObject({ authorized: false, reason: "no_matching_policy" });
   });
 
-  it("recognition() matches by authority/recognized-authority plus context subset", async () => {
+  it("recognition() matches by entity/authority/action/resource plus context subset", async () => {
     recognitionRows = [
       {
-        authority_id: "did:web:media-registry.example",
-        recognized_authority_id: "did:web:issuer.example",
+        entity_id: "did:web:creator.example",
+        authority_id: "did:web:issuer.example",
+        action: "publish",
+        resource: "asset",
         context: JSON.stringify({}),
         recognized: 1,
         policy_epoch: "2026-Q1",
@@ -87,7 +89,7 @@ describe("MySQLPolicyService", () => {
     ];
     const service = new MySQLPolicyService();
 
-    const result = await service.recognition("did:web:media-registry.example", "did:web:issuer.example", {});
+    const result = await service.recognition("did:web:creator.example", "did:web:issuer.example", "publish", "asset", {});
 
     expect(result).toMatchObject({ recognized: true, policy_epoch: "2026-Q1" });
   });

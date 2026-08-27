@@ -40,15 +40,17 @@ CREATE TABLE authorizations (
 
 CREATE TABLE recognitions (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  entity_id VARCHAR(255) NOT NULL,
   authority_id VARCHAR(255) NOT NULL,
-  recognized_authority_id VARCHAR(255) NOT NULL,
+  action VARCHAR(255) NOT NULL,
+  resource VARCHAR(255) NOT NULL,
   context JSON,
   recognized BOOLEAN NOT NULL,
   expires VARCHAR(64),
   policy_epoch VARCHAR(64),
   evidence JSON,
   reason VARCHAR(255),
-  INDEX (authority_id, recognized_authority_id)
+  INDEX (entity_id, authority_id, action, resource)
 );
 
 -- Single-row table: this reference scaffold reads the first row it finds.
@@ -63,7 +65,7 @@ CREATE TABLE revocations (
 
 Table names are configurable via `authorizationsTable` / `recognitionsTable` / `revocationsTable` options.
 
-**Context matching**: candidate rows are fetched by an exact `WHERE` match on `entity_id`/`authority_id`/`action`/`resource` (or `authority_id`/`recognized_authority_id`), then filtered in application code so every key in the stored `context` JSON must match the request's context - the request may carry additional context keys. This intentionally mirrors `MockTRQPService`'s matching semantics rather than a JSON-equality SQL predicate, which would be both less portable across MySQL versions and sensitive to key order.
+**Context matching**: candidate rows are fetched by an exact `WHERE` match on `entity_id`/`authority_id`/`action`/`resource` (both tables use this shape — TRQP v2's Recognition Query is scoped the same way Authorization Query is), then filtered in application code so every key in the stored `context` JSON must match the request's context - the request may carry additional context keys. This intentionally mirrors `MockTRQPService`'s matching semantics rather than a JSON-equality SQL predicate, which would be both less portable across MySQL versions and sensitive to key order.
 
 ## Not implemented in this reference scaffold
 

@@ -26,8 +26,10 @@ interface AuthorizationDoc {
 }
 
 interface RecognitionDoc {
+  entity_id: string;
   authority_id: string;
-  recognized_authority_id: string;
+  action: string;
+  resource: string;
   context?: Record<string, unknown>;
   recognized: boolean;
   expires?: string | null;
@@ -130,13 +132,15 @@ export class MongoPolicyService implements PolicyService {
   }
 
   async recognition(
+    entityId: string,
     authorityId: string,
-    recognizedAuthorityId: string,
+    action: string,
+    resource: string,
     context: Record<string, unknown>,
   ): Promise<RecognitionResponse> {
     const col = await getCollection<RecognitionDoc>(this.collections.recognitionsCollection, this.options);
     const candidates = await col
-      .find({ authority_id: authorityId, recognized_authority_id: recognizedAuthorityId })
+      .find({ entity_id: entityId, authority_id: authorityId, action, resource })
       .toArray();
     const match = candidates.find((doc) => contextMatches(context, doc.context ?? {}));
     if (!match) {

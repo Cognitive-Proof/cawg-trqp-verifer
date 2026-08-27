@@ -1,6 +1,6 @@
 {
   "name": "@cognitiveproof/cawg-trqp-plugin-postgres",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Postgres-backed PolicyService for cawg-trqp-refimpl",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cognitiveproof/cawg-trqp-plugin-types": "^0.1.0",
+    "@cognitiveproof/cawg-trqp-plugin-types": "^0.1.1",
     "pg": "^8.13.1"
   },
   "devDependencies": {

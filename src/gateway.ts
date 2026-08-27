@@ -81,14 +81,25 @@ export class TrustGateway {
     return [asDict(response), await this.mediation(service, routeLabel, authorityId, "authorization")];
   }
 
+  /**
+   * routeAuthorityId picks which registry answers the query (mirroring
+   * authorization's routing, so a multi-authority mesh keyed by the
+   * request's home authority still resolves correctly); authorityId is the
+   * query's own "is this authority recognized..." subject (TRQP v2 recognition
+   * is often checking an issuer's standing, so the two can legitimately
+   * differ from each other).
+   */
   async recognition(
+    routeAuthorityId: string,
+    entityId: string,
     authorityId: string,
-    recognizedAuthorityId: string,
+    action: string,
+    resource: string,
     context: Record<string, unknown>,
   ): Promise<[Record<string, unknown>, Record<string, unknown>]> {
-    const [service, routeLabel] = this.resolveRoute(authorityId);
-    const response = await service.recognition(authorityId, recognizedAuthorityId, context);
-    return [asDict(response), await this.mediation(service, routeLabel, authorityId, "recognition")];
+    const [service, routeLabel] = this.resolveRoute(routeAuthorityId);
+    const response = await service.recognition(entityId, authorityId, action, resource, context);
+    return [asDict(response), await this.mediation(service, routeLabel, routeAuthorityId, "recognition")];
   }
 }
 

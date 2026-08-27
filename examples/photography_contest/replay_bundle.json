@@ -3,7 +3,7 @@
   "bundle_profile": "https://sankarshanmukhopadhyay.github.io/cawg-trqp-verifier-refimpl/profiles/audit-bundle/v1",
   "bundle_version": "1.3.0",
   "exported_at": "2026-09-18T10:30:30Z",
-  "bundle_id": "urn:trqp:audit-bundle:sha256:fd6ca3ca89a299b2e2958a1f5d32ed8f9ff4c4559d5a48cad941ab9a64d04ab3",
+  "bundle_id": "urn:trqp:audit-bundle:sha256:bb3fbb67e7a898ccbad4b62b673827d360c8ba928596fc315ce299248530eb88",
   "request_summary": {
     "asset_id": "photo:wlm-demo:kolkata-victoria-memorial-001",
     "entity_id": "did:web:participant-42.example",
@@ -26,14 +26,6 @@
     "has_process_evidence": true
   },
   "verification_result": {
-    "asset_integrity": "verified",
-    "assertion_binding": "verified",
-    "issuer_recognition": "recognized",
-    "actor_authorization": "authorized",
-    "process_integrity": "verified_high",
-    "policy_freshness": "fresh",
-    "verification_mode": "cached_online",
-    "trust_outcome": "trusted",
     "process_appraisal": {
       "status": "verified",
       "process_type": "original_photography_submission",
@@ -140,13 +132,13 @@
           "authority_ok": true,
           "signature_ok": true,
           "freshness_ok": true,
-          "reason_code": "fresh",
           "violations": [],
           "digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
           "declared_digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
           "issued_at": "2026-04-27T00:00:00Z",
           "valid_until": "2027-04-27T00:00:00Z",
-          "max_age_seconds": 86400
+          "max_age_seconds": 86400,
+          "reason_code": "fresh"
         },
         "freshness_ok": true,
         "max_age_seconds": 3600,
@@ -163,13 +155,13 @@
           "authority_ok": true,
           "signature_ok": true,
           "freshness_ok": true,
-          "reason_code": "fresh",
           "violations": [],
-          "digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
-          "declared_digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
+          "digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
+          "declared_digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
           "issued_at": "2026-04-27T00:00:00Z",
           "valid_until": "2027-04-27T00:00:00Z",
-          "max_age_seconds": 86400
+          "max_age_seconds": 86400,
+          "reason_code": "fresh"
         },
         "revocation": {
           "descriptor_id": "urn:trqp:feed-descriptor:photography-contest:revocation:2026-demo",
@@ -180,13 +172,13 @@
           "authority_ok": true,
           "signature_ok": true,
           "freshness_ok": true,
-          "reason_code": "fresh",
           "violations": [],
           "digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
           "declared_digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
           "issued_at": "2026-04-27T00:00:00Z",
           "valid_until": "2027-04-27T00:00:00Z",
-          "max_age_seconds": 86400
+          "max_age_seconds": 86400,
+          "reason_code": "fresh"
         }
       }
     },
@@ -195,7 +187,15 @@
       "Verification profile: standard",
       "Live authorization lookup executed",
       "Live recognition lookup executed"
-    ]
+    ],
+    "asset_integrity": "verified",
+    "assertion_binding": "verified",
+    "issuer_recognition": "recognized",
+    "actor_authorization": "authorized",
+    "process_integrity": "verified_high",
+    "policy_freshness": "fresh",
+    "verification_mode": "cached_online",
+    "trust_outcome": "trusted"
   },
   "policy_evidence": {
     "authorization_evidence": [
@@ -293,13 +293,13 @@
         "authority_ok": true,
         "signature_ok": true,
         "freshness_ok": true,
-        "reason_code": "fresh",
         "violations": [],
         "digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
         "declared_digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
         "issued_at": "2026-04-27T00:00:00Z",
         "valid_until": "2027-04-27T00:00:00Z",
-        "max_age_seconds": 86400
+        "max_age_seconds": 86400,
+        "reason_code": "fresh"
       },
       "freshness_ok": true,
       "max_age_seconds": 3600,
@@ -316,13 +316,13 @@
         "authority_ok": true,
         "signature_ok": true,
         "freshness_ok": true,
-        "reason_code": "fresh",
         "violations": [],
-        "digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
-        "declared_digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
+        "digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
+        "declared_digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
         "issued_at": "2026-04-27T00:00:00Z",
         "valid_until": "2027-04-27T00:00:00Z",
-        "max_age_seconds": 86400
+        "max_age_seconds": 86400,
+        "reason_code": "fresh"
       },
       "revocation": {
         "descriptor_id": "urn:trqp:feed-descriptor:photography-contest:revocation:2026-demo",
@@ -333,13 +333,13 @@
         "authority_ok": true,
         "signature_ok": true,
         "freshness_ok": true,
-        "reason_code": "fresh",
         "violations": [],
         "digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
         "declared_digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
         "issued_at": "2026-04-27T00:00:00Z",
         "valid_until": "2027-04-27T00:00:00Z",
-        "max_age_seconds": 86400
+        "max_age_seconds": 86400,
+        "reason_code": "fresh"
       }
     }
   },
@@ -384,6 +384,12 @@
         "appraisal": "contest_submission_screening",
         "reference": "docs/workflows/photography-contest-verification.md"
       }
+    },
+    "privacy": {
+      "profile": "replay_bundle",
+      "retention_days": 90,
+      "access_scope": "trqp.audit.export",
+      "contains_raw_request": true
     },
     "profile": {
       "id": "standard",
@@ -465,13 +471,13 @@
         "authority_ok": true,
         "signature_ok": true,
         "freshness_ok": true,
-        "reason_code": "fresh",
         "violations": [],
         "digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
         "declared_digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
         "issued_at": "2026-04-27T00:00:00Z",
         "valid_until": "2027-04-27T00:00:00Z",
-        "max_age_seconds": 86400
+        "max_age_seconds": 86400,
+        "reason_code": "fresh"
       },
       "freshness_ok": true,
       "max_age_seconds": 3600,
@@ -488,13 +494,13 @@
         "authority_ok": true,
         "signature_ok": true,
         "freshness_ok": true,
-        "reason_code": "fresh",
         "violations": [],
-        "digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
-        "declared_digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
+        "digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
+        "declared_digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
         "issued_at": "2026-04-27T00:00:00Z",
         "valid_until": "2027-04-27T00:00:00Z",
-        "max_age_seconds": 86400
+        "max_age_seconds": 86400,
+        "reason_code": "fresh"
       },
       "revocation": {
         "descriptor_id": "urn:trqp:feed-descriptor:photography-contest:revocation:2026-demo",
@@ -505,13 +511,13 @@
         "authority_ok": true,
         "signature_ok": true,
         "freshness_ok": true,
-        "reason_code": "fresh",
         "violations": [],
         "digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
         "declared_digest_sha256": "00395f6e43e6ad7a2b268aaf2cca08fcbada939cff49d25fb3619f55c7683d1c",
         "issued_at": "2026-04-27T00:00:00Z",
         "valid_until": "2027-04-27T00:00:00Z",
-        "max_age_seconds": 86400
+        "max_age_seconds": 86400,
+        "reason_code": "fresh"
       }
     },
     "replay_contract": {
@@ -521,17 +527,17 @@
       "deterministic_inputs": true
     },
     "policy_feed": {
-      "policy_source": "examples/photography_contest/contest_policy_feed.json",
-      "policy_source_sha256": "826eb6927fcd2e9d9d06fe0b130c7f3d159c8f4f8db0347fe76aa5997f321e1c",
-      "revocation_source": "examples/photography_contest/contest_revocation_feed.json",
+      "policy_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/contest_policy_feed.json",
+      "policy_source_sha256": "08d87c4d81e81979ebea44a571e0a80b01ba213b81b8d620bbe832846dabda23",
+      "revocation_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/contest_revocation_feed.json",
       "revocation_source_sha256": "d47331aa0997bee6583cca0f9e9e7b850f5bf7f789e11baa26b4b52c5b4b635e",
-      "policy_descriptor_source": "examples/photography_contest/policy-feed.signed.json",
-      "policy_descriptor_source_sha256": "ac908a0624354a10cbc0cf4ffdab03bb602bdaef0992a67dc4980db9a0f8efa0",
-      "revocation_descriptor_source": "examples/photography_contest/revocation-feed.signed.json",
+      "policy_descriptor_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/policy-feed.signed.json",
+      "policy_descriptor_source_sha256": "5a68e6a52cfb58948ab71aed6a55421d668fb06d73b4a92861e012135522b940",
+      "revocation_descriptor_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/revocation-feed.signed.json",
       "revocation_descriptor_source_sha256": "8684337b22a7c71e9e4efa00c4f241786c9bcba9aa587a857a12daf7cd69c57d",
-      "trust_anchors_source": "examples/photography_contest/trust_anchors.json",
-      "trust_anchors_source_sha256": "191f667ebc6747352b457102ff49ee2840d1abbfdd8c56cdd629c9bdcb8cbb45"
+      "trust_anchors_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/trust_anchors.json",
+      "trust_anchors_source_sha256": "7bcbeb5ff63f95ea50eaa2e8319c21873052bdfef4966fc12ccc7539b86d8e71"
     }
   },
-  "bundle_digest_sha256": "ac102c37437c0518cc3f260b0368796130d12113a3930d4b024bf6a9baf10b2b"
+  "bundle_digest_sha256": "4eb622678d165d0cd72466db8a450e45d55321578ec5f226f4b15e1f0b85a997"
 }

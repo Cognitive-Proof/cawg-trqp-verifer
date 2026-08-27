@@ -48,8 +48,7 @@
   ],
   "recognition": [
     {
-      "authority_id": "did:web:media-registry.example",
-      "recognized_authority_id": "did:web:issuer.example",
+      "authority_id": "did:web:issuer.example",
       "context": {
         "credential_type": "vc:creator-identity"
       },
@@ -57,11 +56,13 @@
       "policy_epoch": "2026-03-01T00:00:00Z",
       "evidence": [
         "recognition:media-registry:issuer"
-      ]
+      ],
+      "entity_id": "did:web:publisher.example",
+      "action": "publish",
+      "resource": "cawg:news-content"
     },
     {
-      "authority_id": "did:web:coalition-registry.example",
-      "recognized_authority_id": "did:web:issuer.eu.example",
+      "authority_id": "did:web:issuer.eu.example",
       "context": {
         "credential_type": "vc:creative-studio"
       },
@@ -69,7 +70,10 @@
       "policy_epoch": "2026-03-15T00:00:00Z",
       "evidence": [
         "recognition:coalition-registry:issuer-eu"
-      ]
+      ],
+      "entity_id": "did:web:studio.example",
+      "action": "publish",
+      "resource": "cawg:partner-content"
     }
   ]
 }

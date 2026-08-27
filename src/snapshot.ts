@@ -136,8 +136,10 @@ export class SnapshotStore {
   }
 
   findRecognition(
+    entityId: string,
     authorityId: string,
-    recognizedAuthorityId: string,
+    action: string,
+    resource: string,
     context: Record<string, unknown>,
   ): Record<string, unknown> | null {
     if (!this.isUsable()) {
@@ -146,8 +148,10 @@ export class SnapshotStore {
     const items = (this.data.recognition as Record<string, unknown>[] | undefined) ?? [];
     for (const item of items) {
       if (
+        item.entity_id === entityId &&
         item.authority_id === authorityId &&
-        item.recognized_authority_id === recognizedAuthorityId &&
+        item.action === action &&
+        item.resource === resource &&
         contextMatches(context, (item.context as Record<string, unknown> | undefined) ?? {})
       ) {
         return item;

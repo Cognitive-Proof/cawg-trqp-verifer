@@ -24,12 +24,12 @@ const verifier = new Verifier({
 Three collections, matching the JSON shape `MockTRQPService` reads from `data/policies.json` / `data/revocations.json` in the core package - migrating from the mock is a straightforward document copy:
 
 - **`authorizations`**: `{ entity_id, authority_id, action, resource, context, authorized, expires, policy_epoch, evidence, reason, policy_requirements }`
-- **`recognitions`**: `{ authority_id, recognized_authority_id, context, recognized, expires, policy_epoch, evidence, reason }`
+- **`recognitions`**: `{ entity_id, authority_id, action, resource, context, recognized, expires, policy_epoch, evidence, reason }`
 - **`revocations`**: a single document `{ revoked_entities, policy_epoch, issued_at, channel }`
 
 Collection names are configurable via `authorizationsCollection` / `recognitionsCollection` / `revocationsCollection` options.
 
-**Context matching**: candidate documents are fetched by an exact match on `entity_id`/`authority_id`/`action`/`resource` (or `authority_id`/`recognized_authority_id`), then filtered in application code so every key in the stored `context` must match the request's context - the request may carry additional context keys. This intentionally mirrors `MockTRQPService`'s matching semantics rather than relying on MongoDB's exact-subdocument-equality query, which would reject a match whenever key order differs or the request supplies extra context.
+**Context matching**: candidate documents are fetched by an exact match on `entity_id`/`authority_id`/`action`/`resource` (both collections use this shape — TRQP v2's Recognition Query is scoped the same way Authorization Query is), then filtered in application code so every key in the stored `context` must match the request's context - the request may carry additional context keys. This intentionally mirrors `MockTRQPService`'s matching semantics rather than relying on MongoDB's exact-subdocument-equality query, which would reject a match whenever key order differs or the request supplies extra context.
 
 ## Not implemented in this reference scaffold
 

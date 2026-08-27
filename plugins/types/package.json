@@ -1,6 +1,6 @@
 {
   "name": "@cognitiveproof/cawg-trqp-plugin-types",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared TypeScript interfaces for cawg-trqp-refimpl storage/cache plugins (PolicyService, DecisionCache, RevocationDeltaStore)",
   "license": "MIT",
   "type": "module",

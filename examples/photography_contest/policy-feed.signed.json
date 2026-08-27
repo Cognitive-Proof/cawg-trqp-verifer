@@ -5,7 +5,7 @@
   "valid_until": "2027-04-27T00:00:00Z",
   "authority": {
     "authority_id": "did:web:media-registry.example",
-    "key_id": "photography-contest-demo-key-1",
+    "key_id": "photography-contest-demo-key-2",
     "scope": [
       "heritage:photograph",
       "vc:contest-participant",
@@ -28,12 +28,12 @@
     "content_type": "application/json",
     "source": "examples/photography_contest/contest_policy_feed.json",
     "digest_alg": "sha-256",
-    "digest_sha256": "bfc1991231e31b6dede3ca70722036d5cbce8a747666b203f39c64df8b867f89",
+    "digest_sha256": "9ed614a820b369b558f1c186b27b3f5f2608dd49f6f64793390e7e670fbac315",
     "policy_epoch": "2026-WLM-DEMO"
   },
   "descriptor_signature": {
     "algorithm": "Ed25519",
-    "key_id": "photography-contest-demo-key-1",
-    "value": "AepSRZrnt7kiezxd5RS3J08zPjH8YeHmOmjvaF1ripLuaCmqz/m2pnvqh7GRKme4f53MuUPLbIYTFDhRoaZ/BQ=="
+    "key_id": "photography-contest-demo-key-2",
+    "value": "s9uK3Q27EQmsMpCKWcmXXzjhdfySycjAsN6CSeKWikyfgyExAqLS5/4S/1jqd2b47KpIqmGRzqxQZ/boZxRzCA=="
   }
 }

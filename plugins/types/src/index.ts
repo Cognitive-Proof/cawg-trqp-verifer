@@ -94,9 +94,18 @@ export interface PolicyService {
     context: Record<string, unknown>,
   ): Promise<AuthorizationResponse>;
 
+  /**
+   * TRQP v2 Recognition Query: is `authorityId` recognized to decide
+   * `entityId`'s `action` on `resource`? This replaced the earlier
+   * authority-to-authority shape (authorityId, recognizedAuthorityId) in the
+   * approved v2.0 HTTPS binding — the query is now scoped to a specific
+   * entity/action/resource rather than a bare authority pair.
+   */
   recognition(
+    entityId: string,
     authorityId: string,
-    recognizedAuthorityId: string,
+    action: string,
+    resource: string,
     context: Record<string, unknown>,
   ): Promise<RecognitionResponse>;
 

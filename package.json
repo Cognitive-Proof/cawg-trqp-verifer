@@ -1,6 +1,6 @@
 {
   "name": "@cognitiveproof/cawg-trqp",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "Reference implementation for CAWG + TRQP integration (TypeScript port)",
   "license": "MIT",
   "repository": {

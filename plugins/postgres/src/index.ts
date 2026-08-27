@@ -25,8 +25,10 @@ interface AuthorizationRow {
 }
 
 interface RecognitionRow {
+  entity_id: string;
   authority_id: string;
-  recognized_authority_id: string;
+  action: string;
+  resource: string;
   context: unknown;
   recognized: boolean;
   expires: string | null;
@@ -146,14 +148,16 @@ export class PostgresPolicyService implements PolicyService {
   }
 
   async recognition(
+    entityId: string,
     authorityId: string,
-    recognizedAuthorityId: string,
+    action: string,
+    resource: string,
     context: Record<string, unknown>,
   ): Promise<RecognitionResponse> {
     const pool = getPostgresPool(this.uri);
     const result = await pool.query<RecognitionRow>(
-      `SELECT * FROM ${this.tables.recognitionsTable} WHERE authority_id = $1 AND recognized_authority_id = $2`,
-      [authorityId, recognizedAuthorityId],
+      `SELECT * FROM ${this.tables.recognitionsTable} WHERE entity_id = $1 AND authority_id = $2 AND action = $3 AND resource = $4`,
+      [entityId, authorityId, action, resource],
     );
     const match = result.rows.find((row) => contextMatches(context, parseJsonColumn(row.context, {})));
     if (!match) {

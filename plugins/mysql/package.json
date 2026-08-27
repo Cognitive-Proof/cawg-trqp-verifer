@@ -1,6 +1,6 @@
 {
   "name": "@cognitiveproof/cawg-trqp-plugin-mysql",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MySQL-backed PolicyService for cawg-trqp-refimpl",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cognitiveproof/cawg-trqp-plugin-types": "^0.1.0",
+    "@cognitiveproof/cawg-trqp-plugin-types": "^0.1.1",
     "mysql2": "^3.11.4"
   },
   "devDependencies": {

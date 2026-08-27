@@ -40,8 +40,10 @@ CREATE INDEX ON authorizations (entity_id, authority_id, action, resource);
 
 CREATE TABLE recognitions (
   id SERIAL PRIMARY KEY,
+  entity_id TEXT NOT NULL,
   authority_id TEXT NOT NULL,
-  recognized_authority_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  resource TEXT NOT NULL,
   context JSONB,
   recognized BOOLEAN NOT NULL,
   expires TEXT,
@@ -49,7 +51,7 @@ CREATE TABLE recognitions (
   evidence JSONB,
   reason TEXT
 );
-CREATE INDEX ON recognitions (authority_id, recognized_authority_id);
+CREATE INDEX ON recognitions (entity_id, authority_id, action, resource);
 
 -- Single-row table: this reference scaffold reads the first row it finds.
 CREATE TABLE revocations (
@@ -63,7 +65,7 @@ CREATE TABLE revocations (
 
 Table names are configurable via `authorizationsTable` / `recognitionsTable` / `revocationsTable` options.
 
-**Context matching**: candidate rows are fetched by an exact `WHERE` match on `entity_id`/`authority_id`/`action`/`resource` (or `authority_id`/`recognized_authority_id`), then filtered in application code so every key in the stored `context` JSONB must match the request's context - the request may carry additional context keys. This intentionally mirrors `MockTRQPService`'s matching semantics rather than a jsonb containment (`@>`) predicate, which would reject a match whenever the request supplies extra context keys the stored row has no opinion on.
+**Context matching**: candidate rows are fetched by an exact `WHERE` match on `entity_id`/`authority_id`/`action`/`resource` (both tables use this shape — TRQP v2's Recognition Query is scoped the same way Authorization Query is), then filtered in application code so every key in the stored `context` JSONB must match the request's context - the request may carry additional context keys. This intentionally mirrors `MockTRQPService`'s matching semantics rather than a jsonb containment (`@>`) predicate, which would reject a match whenever the request supplies extra context keys the stored row has no opinion on.
 
 ## Not implemented in this reference scaffold
 

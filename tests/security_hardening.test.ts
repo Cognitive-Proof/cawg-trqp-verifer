@@ -38,17 +38,17 @@ describe("HTTP security hardening", () => {
       body: JSON.stringify(payload),
     });
     expect(response.status).toBe(400);
-    expect(((await response.json()) as any).error).toBe("invalid_request");
+    expect(((await response.json()) as any).title).toBe("Bad Request");
   });
 
   it("rejects a non-JSON request body", async () => {
-    const response = await fetch(`${baseUrl}/trqp/authorization`, {
+    const response = await fetch(`${baseUrl}/authorization`, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: "not-json",
     });
     expect(response.status).toBe(415);
-    expect(((await response.json()) as any).error).toBe("invalid_request");
+    expect(((await response.json()) as any).title).toBe("Unsupported Media Type");
   });
 });
 

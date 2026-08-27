@@ -34,7 +34,7 @@ describe("HTTP TRQP service endpoints", () => {
       resource: "cawg:news-content",
       context: { jurisdiction: "IN" },
     };
-    const response = await fetch(`${baseUrl}/trqp/authorization`, {
+    const response = await fetch(`${baseUrl}/authorization`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -42,6 +42,24 @@ describe("HTTP TRQP service endpoints", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as any;
     expect("authorized" in body).toBe(true);
+  });
+
+  it("handles a valid recognition request", async () => {
+    const payload = {
+      entity_id: "did:web:creator.example",
+      authority_id: "did:web:issuer.example",
+      action: "publish",
+      resource: "cawg:news-content",
+      context: {},
+    };
+    const response = await fetch(`${baseUrl}/recognition`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as any;
+    expect("recognized" in body).toBe(true);
   });
 
   it("handles a valid gateway authorization request", async () => {

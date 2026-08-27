@@ -57,13 +57,11 @@ export class HTTPTRQPService {
 
     app.use((err: unknown, _req: Request, res: Response, next: (err?: unknown) => void) => {
       if (err && typeof err === "object" && "type" in err && (err as { type?: string }).type === "entity.too.large") {
-        res
-          .status(413)
-          .json({ error: "request_too_large", message: `Request body exceeds ${MAX_REQUEST_BYTES} bytes` });
+        this.problem(res, 413, "Payload Too Large", `Request body exceeds ${MAX_REQUEST_BYTES} bytes`);
         return;
       }
       if (err) {
-        res.status(400).json({ error: "invalid_request", message: "Request body must be valid JSON" });
+        this.problem(res, 400, "Bad Request", "Request body must be valid JSON");
         return;
       }
       next();
@@ -76,15 +74,20 @@ export class HTTPTRQPService {
       });
     });
 
+    // Bare paths per the TRQP v2.0 HTTPS binding conformance section
+    // ("Authorization queries MUST be sent as POST /authorization",
+    // "Recognition queries MUST be sent as POST /recognition") — these
+    // replaced the earlier /trqp/authorization and /trqp/recognition paths,
+    // which were never spec-conformant.
     app.post(
-      "/trqp/authorization",
+      "/authorization",
       asyncHandler(async (req, res) => {
         const { data, error } = this.jsonBody(req, res);
         if (error) return;
         const required = ["entity_id", "authority_id", "action", "resource"];
         const missing = required.filter((f) => !(f in data));
         if (missing.length) {
-          res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
+          this.problem(res, 400, "Bad Request", `Missing fields: ${missing.join(", ")}`);
           return;
         }
         if (this.requireStrings(res, data, required)) return;
@@ -95,24 +98,33 @@ export class HTTPTRQPService {
           data.resource,
           data.context ?? {},
         );
-        res.status(200).json(this.serializeResponse(result));
+        res.status(200).json(this.serializeResponse(result, data));
       }),
     );
 
     app.post(
-      "/trqp/recognition",
+      "/recognition",
       asyncHandler(async (req, res) => {
         const { data, error } = this.jsonBody(req, res);
         if (error) return;
-        const required = ["authority_id", "recognized_authority_id"];
+        // TRQP v2's Recognition Query is scoped the same way Authorization
+        // Query is (entity_id/authority_id/action/resource), superseding the
+        // earlier authority-to-authority {authority_id, recognized_authority_id} shape.
+        const required = ["entity_id", "authority_id", "action", "resource"];
         const missing = required.filter((f) => !(f in data));
         if (missing.length) {
-          res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
+          this.problem(res, 400, "Bad Request", `Missing fields: ${missing.join(", ")}`);
           return;
         }
         if (this.requireStrings(res, data, required)) return;
-        const result = await this.service.recognition(data.authority_id, data.recognized_authority_id, data.context ?? {});
-        res.status(200).json(this.serializeResponse(result));
+        const result = await this.service.recognition(
+          data.entity_id,
+          data.authority_id,
+          data.action,
+          data.resource,
+          data.context ?? {},
+        );
+        res.status(200).json(this.serializeResponse(result, data));
       }),
     );
 
@@ -124,7 +136,7 @@ export class HTTPTRQPService {
         const required = ["entity_id", "authority_id", "action", "resource"];
         const missing = required.filter((f) => !(f in data));
         if (missing.length) {
-          res.status(400).json({ error: "invalid_request", message: `Missing fields: ${missing.join(", ")}` });
+          this.problem(res, 400, "Bad Request", `Missing fields: ${missing.join(", ")}`);
           return;
         }
         if (this.requireStrings(res, data, required)) return;
@@ -150,7 +162,7 @@ export class HTTPTRQPService {
           request = createVerificationRequest(this.verificationRequestFields(data));
           profile = this.resolveApiProfile(data);
         } catch (exc) {
-          res.status(400).json({ error: "invalid_request", message: (exc as Error).message });
+          this.problem(res, 400, "Bad Request", (exc as Error).message);
           return;
         }
         const verifier = data.use_gateway ? this.gatewayVerifier : this.verifier;
@@ -171,7 +183,7 @@ export class HTTPTRQPService {
           request = createVerificationRequest(this.verificationRequestFields(data));
           profile = this.resolveApiProfile(data);
         } catch (exc) {
-          res.status(400).json({ error: "invalid_request", message: (exc as Error).message });
+          this.problem(res, 400, "Bad Request", (exc as Error).message);
           return;
         }
         const useGateway = Boolean(data.use_gateway);
@@ -198,9 +210,9 @@ export class HTTPTRQPService {
           res.status(200).json(auditBundleToDict(bundle));
         } catch (exc) {
           if (exc instanceof PermissionError) {
-            res.status(403).json({ error: "forbidden", message: exc.message });
+            this.problem(res, 403, "Forbidden", exc.message);
           } else {
-            res.status(400).json({ error: "invalid_request", message: (exc as Error).message });
+            this.problem(res, 400, "Bad Request", (exc as Error).message);
           }
         }
       }),
@@ -214,18 +226,31 @@ export class HTTPTRQPService {
         return;
       }
       console.error("cawg_trqp_http_error", err);
-      res.status(502).json({ error: "upstream_unavailable", message: "The policy service could not complete the request" });
+      this.problem(res, 500, "Internal Server Error", "The policy service could not complete the request");
     });
+  }
+
+  /** RFC 7807 Problem Details, mandated by the TRQP v2.0 HTTPS binding for all error responses. */
+  private problem(res: Response, status: number, title: string, detail: string): void {
+    res
+      .status(status)
+      .contentType("application/problem+json")
+      .json({
+        type: `https://trustoverip.github.io/tswg-trust-registry-protocol/errors/${title.toLowerCase().replace(/\s+/g, "-")}`,
+        title,
+        status,
+        detail,
+      });
   }
 
   private jsonBody(req: Request, res: Response): { data: Record<string, any>; error: boolean } {
     if (!req.is("application/json")) {
-      res.status(415).json({ error: "invalid_request", message: "Request content type must be application/json" });
+      this.problem(res, 415, "Unsupported Media Type", "Request content type must be application/json");
       return { data: {}, error: true };
     }
     const data = req.body;
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      res.status(400).json({ error: "invalid_request", message: "Request body must be a JSON object" });
+      this.problem(res, 400, "Bad Request", "Request body must be a JSON object");
       return { data: {}, error: true };
     }
     return { data, error: false };
@@ -234,11 +259,11 @@ export class HTTPTRQPService {
   private requireStrings(res: Response, data: Record<string, any>, fields: string[]): boolean {
     const invalid = fields.filter((field) => typeof data[field] !== "string" || !data[field]);
     if (invalid.length) {
-      res.status(400).json({ error: "invalid_request", message: `Fields must be non-empty strings: ${invalid.join(", ")}` });
+      this.problem(res, 400, "Bad Request", `Fields must be non-empty strings: ${invalid.join(", ")}`);
       return true;
     }
     if ("context" in data && (typeof data.context !== "object" || data.context === null || Array.isArray(data.context))) {
-      res.status(400).json({ error: "invalid_request", message: "context must be a JSON object" });
+      this.problem(res, 400, "Bad Request", "context must be a JSON object");
       return true;
     }
     return false;
@@ -303,13 +328,30 @@ export class HTTPTRQPService {
     return fields as any;
   }
 
-  private serializeResponse(response: AuthorizationResponse | RecognitionResponse): Record<string, unknown> {
+  /**
+   * requestData supplies the Authorization/Recognition Response's required
+   * echo fields (entity_id/authority_id/action/resource) and time_evaluated
+   * — the v2 spec requires these on every response, not just the request.
+   */
+  private serializeResponse(
+    response: AuthorizationResponse | RecognitionResponse,
+    requestData: Record<string, any>,
+  ): Record<string, unknown> {
     const isRecognition = "recognized" in response;
     const result: Record<string, unknown> = {
+      entity_id: requestData.entity_id,
+      authority_id: requestData.authority_id,
+      action: requestData.action,
+      resource: requestData.resource,
       [isRecognition ? "recognized" : "authorized"]: isRecognition
         ? (response as RecognitionResponse).recognized
         : (response as AuthorizationResponse).authorized,
+      time_evaluated: new Date().toISOString(),
     };
+    const requestedTime = requestData.context?.time;
+    if (typeof requestedTime === "string") {
+      result.time_requested = requestedTime;
+    }
     for (const field of ["expires", "policy_epoch", "evidence", "reason", "policy_requirements"] as const) {
       const value = (response as unknown as Record<string, unknown>)[field];
       if (value !== null && value !== undefined) {

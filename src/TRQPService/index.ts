@@ -86,13 +86,17 @@ export class TRQPService implements PolicyService {
   }
 
   recognition(
+    entityId: string,
     authorityId: string,
-    recognizedAuthorityId: string,
+    action: string,
+    resource: string,
     context: Record<string, unknown>,
   ): Promise<RecognitionResponse> {
     return this.recognitionProcessState.checkRecognition({
+        entityId,
         authorityId,
-        recognizedAuthorityId,
+        action,
+        resource,
         context,
     });
   }

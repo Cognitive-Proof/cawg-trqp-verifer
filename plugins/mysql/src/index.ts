@@ -26,8 +26,10 @@ interface AuthorizationRow extends RowDataPacket {
 }
 
 interface RecognitionRow extends RowDataPacket {
+  entity_id: string;
   authority_id: string;
-  recognized_authority_id: string;
+  action: string;
+  resource: string;
   context: unknown;
   recognized: number | boolean;
   expires: string | null;
@@ -148,14 +150,16 @@ export class MySQLPolicyService implements PolicyService {
   }
 
   async recognition(
+    entityId: string,
     authorityId: string,
-    recognizedAuthorityId: string,
+    action: string,
+    resource: string,
     context: Record<string, unknown>,
   ): Promise<RecognitionResponse> {
     const pool = getMySQLPool(this.uri);
     const [rows] = await pool.query<RecognitionRow[]>(
-      `SELECT * FROM ${this.tables.recognitionsTable} WHERE authority_id = ? AND recognized_authority_id = ?`,
-      [authorityId, recognizedAuthorityId],
+      `SELECT * FROM ${this.tables.recognitionsTable} WHERE entity_id = ? AND authority_id = ? AND action = ? AND resource = ?`,
+      [entityId, authorityId, action, resource],
     );
     const match = rows.find((row) => contextMatches(context, parseJsonColumn(row.context, {})));
     if (!match) {

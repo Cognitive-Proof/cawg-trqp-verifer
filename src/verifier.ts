@@ -94,7 +94,14 @@ export class Verifier {
     if ("credential_type" in request.context) {
       recContext.credential_type = request.context.credential_type;
     }
-    const recKey = tupleKey(request.authority_id, request.issuer_id ?? "", "recognition", "issuer", recContext);
+    // Recognition is now scoped to entity/action/resource like authorization
+    // is (TRQP v2), asking whether the issuer is recognized as an authority
+    // over this entity's action on this resource — so the cache key needs a
+    // tag to stay distinct from authKey even if issuer_id === authority_id.
+    const recKey = tupleKey(request.entity_id, request.issuer_id ?? "", request.action, request.resource, {
+      ...recContext,
+      _query: "recognition",
+    });
 
     if (resolvedProfile.base_profile === "edge") {
       return this.verifyEdge(request, recContext, resolvedProfile);
@@ -350,7 +357,7 @@ export class Verifier {
     );
     let rec: Record<string, unknown> | null = null;
     if (request.issuer_id) {
-      rec = this.snapshot.findRecognition(request.authority_id, request.issuer_id, recContext);
+      rec = this.snapshot.findRecognition(request.entity_id, request.issuer_id, request.action, request.resource, recContext);
     }
     return this.synthesizeResult({
       auth,
@@ -454,16 +461,26 @@ export class Verifier {
     if (request.issuer_id) {
       if (rec === null) {
         if (this.gateway !== null) {
-          const [recResult, recMediation] = await this.gateway.recognition(request.authority_id, request.issuer_id, recContext);
+          const [recResult, recMediation] = await this.gateway.recognition(
+            request.authority_id,
+            request.entity_id,
+            request.issuer_id!,
+            request.action,
+            request.resource,
+            recContext,
+          );
           rec = recResult;
           gatewayMediation = { ...gatewayMediation, recognition: recMediation };
           await this.cache.set(recKey, rec, "medium");
           explanations.push("Trust gateway mediated recognition lookup");
         } else if (this.service !== null) {
-          rec = (await this.service.recognition(request.authority_id, request.issuer_id, recContext)) as unknown as Record<
-            string,
-            unknown
-          >;
+          rec = (await this.service.recognition(
+            request.entity_id,
+            request.issuer_id!,
+            request.action,
+            request.resource,
+            recContext,
+          )) as unknown as Record<string, unknown>;
           await this.cache.set(recKey, rec, "medium");
           explanations.push("Live recognition lookup executed");
         }
