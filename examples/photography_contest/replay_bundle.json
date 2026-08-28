@@ -527,17 +527,17 @@
       "deterministic_inputs": true
     },
     "policy_feed": {
-      "policy_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/contest_policy_feed.json",
+      "policy_source": "examples/photography_contest/contest_policy_feed.json",
       "policy_source_sha256": "08d87c4d81e81979ebea44a571e0a80b01ba213b81b8d620bbe832846dabda23",
-      "revocation_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/contest_revocation_feed.json",
+      "revocation_source": "examples/photography_contest/contest_revocation_feed.json",
       "revocation_source_sha256": "d47331aa0997bee6583cca0f9e9e7b850f5bf7f789e11baa26b4b52c5b4b635e",
-      "policy_descriptor_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/policy-feed.signed.json",
+      "policy_descriptor_source": "examples/photography_contest/policy-feed.signed.json",
       "policy_descriptor_source_sha256": "5a68e6a52cfb58948ab71aed6a55421d668fb06d73b4a92861e012135522b940",
-      "revocation_descriptor_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/revocation-feed.signed.json",
+      "revocation_descriptor_source": "examples/photography_contest/revocation-feed.signed.json",
       "revocation_descriptor_source_sha256": "8684337b22a7c71e9e4efa00c4f241786c9bcba9aa587a857a12daf7cd69c57d",
-      "trust_anchors_source": "/Users/matthewrappard/Documents/GitHub/trqp/cawg-trqp-verifier-ts/examples/photography_contest/trust_anchors.json",
+      "trust_anchors_source": "examples/photography_contest/trust_anchors.json",
       "trust_anchors_source_sha256": "7bcbeb5ff63f95ea50eaa2e8319c21873052bdfef4966fc12ccc7539b86d8e71"
     }
   },
-  "bundle_digest_sha256": "4eb622678d165d0cd72466db8a450e45d55321578ec5f226f4b15e1f0b85a997"
+  "bundle_digest_sha256": "3c7f620ea350999b566b58644b9892d03e194514f7e4d0240943199f976695fc"
 }
