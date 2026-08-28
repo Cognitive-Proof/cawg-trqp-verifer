@@ -3,6 +3,11 @@
   "version": "0.1.1",
   "description": "Postgres-backed PolicyService for cawg-trqp-refimpl",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cognitive-Proof/cawg-trqp-verifer.git",
+    "directory": "plugins/postgres"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
