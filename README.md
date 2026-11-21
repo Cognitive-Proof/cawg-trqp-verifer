@@ -108,6 +108,7 @@ const result = verifier.verify(request, "standard");
 | [`@cognitiveproof/cawg-trqp-plugin-mysql`](plugins/mysql) | `PolicyService` | [`mysql2`](https://www.npmjs.com/package/mysql2) |
 | [`@cognitiveproof/cawg-trqp-plugin-postgres`](plugins/postgres) | `PolicyService` | [`pg`](https://www.npmjs.com/package/pg) |
 | [`@cognitiveproof/cawg-trqp-plugin-redis`](plugins/redis) | `DecisionCache`, `RevocationDeltaStore` | [`ioredis`](https://github.com/redis/ioredis) — needed once you run more than one verifier instance, since the in-memory defaults don't share state across processes |
+| [`@cognitiveproof/cawg-trqp-plugin-admin`](plugins/admin) | `PolicyService` (time-aware), `RegistryAdmin`, HTTP router | [`mongodb`](https://www.npmjs.com/package/mongodb) or in-memory — access requests with proof of key possession, admin approval and revocation |
 
 Each is an optional peer dependency of the core package — install only the ones your deployment needs. See each plugin's own README for schema and usage.
 

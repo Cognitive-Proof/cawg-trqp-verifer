@@ -1,0 +1,53 @@
+{
+  "name": "@cognitiveproof/cawg-trqp-plugin-admin",
+  "version": "0.0.0",
+  "description": "Trust registry administration for cawg-trqp-refimpl: access requests with proof of key possession, admin approval and revocation, and a time-aware PolicyService over the resulting grants",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cognitive-Proof/cawg-trqp-verifer.git",
+    "directory": "plugins/admin"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cognitiveproof/cawg-trqp-plugin-types": "^0.1.1",
+    "mongodb": "^6.10.0"
+  },
+  "peerDependencies": {
+    "express": "^4.21.2 || ^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "express": "^4.21.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
+  }
+}
