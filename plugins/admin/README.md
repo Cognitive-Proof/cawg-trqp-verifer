@@ -5,6 +5,7 @@ Trust registry administration for [`cawg-trqp-refimpl`](../../README.md). The qu
 - **Access requests.** An entity asks for a permission (`authority_id`, `action`, `resource`) and proves it controls its identifier's key by signing a single-use challenge.
 - **Approval.** Administrators approve, reject and revoke. Every step is recorded in an audit log.
 - **TRQP answers.** `AdminPolicyService` is a `PolicyService` over the resulting grants, so `HTTPTRQPService` serves them as TRQP authorization queries.
+- **Admin page.** `createAdminUI()` serves a small web page for deciding requests, adding and revoking grants and reading the audit log.
 - **Time-aware answers.** A query with `context.time` is answered as of that moment, so revoking a grant stops authorization from then on without changing the answer for earlier times. For example, a consent credential issued while its issuer was authorized stays valid after the issuer is revoked.
 
 ## Install
@@ -20,7 +21,7 @@ npm install @cognitiveproof/cawg-trqp-plugin-admin
 ```ts
 import { HTTPTRQPService } from "@cognitiveproof/cawg-trqp";
 import { AdminPolicyService, MongoAdminStore, RegistryAdmin } from "@cognitiveproof/cawg-trqp-plugin-admin";
-import { bearerTokenAdmins, createAdminRouter } from "@cognitiveproof/cawg-trqp-plugin-admin/router";
+import { bearerTokenAdmins, createAdminRouter, createAdminUI } from "@cognitiveproof/cawg-trqp-plugin-admin/router";
 
 const store = new MongoAdminStore({ uri: process.env.MONGO_URI, dbName: "trqp" });
 const admin = new RegistryAdmin({
@@ -29,7 +30,11 @@ const admin = new RegistryAdmin({
 });
 
 const service = new HTTPTRQPService(new AdminPolicyService({ store })); // POST /authorization, /recognition
-service.app.use("/registry", createAdminRouter(admin, { authenticateAdmin: bearerTokenAdmins({ [process.env.ADMIN_TOKEN!]: "admin" }) }));
+service.app.use(
+  "/registry",
+  createAdminUI(), // the admin page, at /registry/ui/
+  createAdminRouter(admin, { authenticateAdmin: bearerTokenAdmins({ [process.env.ADMIN_TOKEN!]: "admin" }) }),
+);
 service.run("0.0.0.0", 8080);
 ```
 
@@ -44,6 +49,29 @@ service.run("0.0.0.0", 8080);
 3. `POST /registry/requests` with `{ entity_id, authority_id, action, resource, challenge, signature, applicant? }`. The signature is base64 or base64url.
 
 `did:key` Ed25519 identifiers are verified out of the box. Pass `proofVerifiers` to support other methods. Pass `checkApplicant` to add deployment-specific checks, for example requiring a certificate from your CA. It runs after proof of possession, refuses by throwing an `AdminError`, and can return evidence strings to record on the request.
+
+## Admin page
+
+`createAdminUI()` serves the page at `/ui/` under wherever it's mounted. Mount it on the same path as `createAdminRouter`, because the page calls the API one level up (`/registry/ui/` calls `/registry/admin/...`).
+
+- **Requests:** pending, approved and rejected requests, with the applicant's details and evidence. Approve or reject with an optional note.
+- **Grants:** add a grant (pick one of the `requestable` permissions or type any authority, action and resource), list active or revoked grants, and revoke with an optional reason.
+- **Audit:** every request, decision, grant and revocation, newest first.
+
+The page signs in with an administrator's bearer token, as `bearerTokenAdmins()` expects, and keeps it in `sessionStorage`, so it lasts for that browser tab only. Use a long random token and serve the registry over HTTPS. The page is served with a strict content security policy and can't be framed.
+
+Options: `path` (default `"/ui"`) and `root`, a directory holding your own build of the page.
+
+### Working on the page
+
+The page is plain TypeScript in [`ui/`](./ui), built with Vite into `dist/ui` as part of `npm run build`.
+
+```bash
+npm run dev:server -w @cognitiveproof/cawg-trqp-plugin-admin  # in-memory registry with sample data on :8080, token dev-admin-token
+npm run dev:ui -w @cognitiveproof/cawg-trqp-plugin-admin      # Vite with live reload: http://localhost:5175/registry/ui/
+```
+
+`dev:ui` proxies API calls to `TRQP_URL` (default `http://localhost:8080`), so it can also point at a real registry.
 
 ## HTTP API
 

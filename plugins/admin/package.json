@@ -1,7 +1,7 @@
 {
   "name": "@cognitiveproof/cawg-trqp-plugin-admin",
   "version": "0.0.0",
-  "description": "Trust registry administration for cawg-trqp-refimpl: access requests with proof of key possession, admin approval and revocation, and a time-aware PolicyService over the resulting grants",
+  "description": "Trust registry administration for cawg-trqp-refimpl: access requests with proof of key possession, admin approval and revocation, a time-aware PolicyService over the resulting grants, and an admin web page",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -28,9 +28,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.typecheck.json",
-    "test": "vitest run"
+    "build": "tsc -p tsconfig.json && vite build --config ui/vite.config.ts",
+    "typecheck": "tsc -p tsconfig.typecheck.json && tsc -p ui/tsconfig.json",
+    "test": "vitest run",
+    "dev:server": "tsx ui/dev-server.ts",
+    "dev:ui": "vite --config ui/vite.config.ts"
   },
   "dependencies": {
     "@cognitiveproof/cawg-trqp-plugin-types": "^0.1.1",
@@ -48,6 +50,7 @@
     "@types/express": "^4.17.21",
     "express": "^4.21.2",
     "typescript": "^5.7.2",
+    "vite": "^8.1.5",
     "vitest": "^4.1.10"
   }
 }

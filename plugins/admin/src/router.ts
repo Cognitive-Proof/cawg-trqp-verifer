@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import express, { type NextFunction, type Request, type Response, type Router } from "express";
 import { AdminError, type RegistryAdmin } from "./admin.js";
 import type { RequestStatus } from "./types.js";
@@ -189,5 +190,42 @@ export function createAdminRouter(admin: RegistryAdmin, options: AdminRouterOpti
     problem(res, 500, "Internal Server Error", "The registry could not complete the request");
   });
 
+  return router;
+}
+
+export interface AdminUIOptions {
+  /** Path the page is served under, relative to the mount point. Default "/ui". */
+  path?: string;
+  /** Directory holding the built page. Default: the copy shipped in this package. */
+  root?: string;
+}
+
+/**
+ * The admin page: requests, grants and the audit log, over the admin router's
+ * API. Mount it on the same path as createAdminRouter, e.g.
+ * `app.use("/registry", createAdminUI(), createAdminRouter(admin, …))` serves
+ * it at /registry/ui/. The page asks for an administrator's bearer token, so
+ * it suits `bearerTokenAdmins()`; with another authenticateAdmin it works if
+ * the browser's credentials (e.g. a session cookie) satisfy it.
+ */
+export function createAdminUI(options: AdminUIOptions = {}): Router {
+  const path = options.path ?? "/ui";
+  const root = options.root ?? fileURLToPath(new URL("./ui/", import.meta.url));
+  const router = express.Router();
+  router.use(path, (req, res, next) => {
+    // The page finds the API at "../", so it must be addressed as a directory.
+    // A relative redirect ("ui/" from ".../ui") keeps whatever prefix it is mounted under.
+    const [pathname, query] = req.originalUrl.split(/\?(.*)/s);
+    if (req.method === "GET" && !pathname.endsWith("/") && req.path === "/") {
+      return res.redirect(301, `${pathname.slice(pathname.lastIndexOf("/") + 1)}/${query ? `?${query}` : ""}`);
+    }
+    res.set({
+      "content-security-policy": "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "no-referrer",
+    });
+    next();
+  });
+  router.use(path, express.static(root, { index: "index.html", fallthrough: true }));
   return router;
 }
