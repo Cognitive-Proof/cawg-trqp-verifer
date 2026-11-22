@@ -1,6 +1,6 @@
 {
   "name": "@cognitiveproof/cawg-trqp-plugin-admin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Trust registry administration for cawg-trqp-refimpl: access requests with proof of key possession, admin approval and revocation, a time-aware PolicyService over the resulting grants, and an admin web page",
   "license": "MIT",
   "repository": {
