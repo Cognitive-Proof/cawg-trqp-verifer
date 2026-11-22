@@ -1,5 +1,11 @@
 # @cognitiveproof/cawg-trqp-plugin-admin
 
+## 0.1.1
+
+### Patch Changes
+
+- [#4](https://github.com/Cognitive-Proof/cawg-trqp-verifer/pull/4) [`14d65ca`](https://github.com/Cognitive-Proof/cawg-trqp-verifer/commit/14d65cab1de01788653ff9a6062634916e397ef1) Thanks [@mrappard](https://github.com/mrappard)! - First release published from CI through npm trusted publishing, with provenance. No code changes from 0.1.0.
+
 ## 0.1.0
 
 ### Minor Changes
